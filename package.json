@@ -32,7 +32,9 @@
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
-    "credentials": [],
+    "credentials": [
+      "dist/credentials/DocxToMdCredentialsApi.credentials.js"
+    ],
     "nodes": [
       "dist/nodes/DocxToMd/DocxToMd.node.js"
     ]
