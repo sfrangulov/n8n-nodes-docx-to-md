@@ -12,7 +12,7 @@ import TurndownService from '@joplin/turndown';
 // @ts-ignore
 import * as turndownPluginGfm from '@joplin/turndown-plugin-gfm';
 import * as mammoth from 'mammoth';
-import * as markdownlint from "markdownlint";
+import markdownlint from 'markdownlint';
 // @ts-ignore
 import markdownlintRuleHelpers from 'markdownlint-rule-helpers';
 import { parse } from 'node-html-parser';
@@ -61,7 +61,7 @@ function htmlToMd(html: string, options: object = {}): string {
 
 // Lint the Markdown and correct any issues
 async function lint(md: string): Promise<string> {
-	const lintResult = await markdownlint({ strings: { md } });
+	const lintResult = await markdownlint.async({ strings: { md } });
 	return markdownlintRuleHelpers.applyFixes(md, lintResult['md']).trim();
 }
 
