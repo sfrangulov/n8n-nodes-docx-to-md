@@ -15,7 +15,7 @@ import * as mammoth from 'mammoth';
 // @ts-ignore
 const markdownlintSync = require('markdownlint/sync');
 // @ts-ignore
-import markdownlintRuleHelpers from 'markdownlint-rule-helpers';
+const markdownlintRuleHelpers = require('markdownlint-rule-helpers');
 import { parse } from 'node-html-parser';
 
 interface ConvertOptions {
@@ -64,7 +64,7 @@ function htmlToMd(html: string, options: object = {}): string {
 async function lint(md: string): Promise<string> {
 	const options = {
 		strings: {
-			'content': md,
+			content: md,
 		},
 	};
 	const lintResult = markdownlintSync.lint(options);
