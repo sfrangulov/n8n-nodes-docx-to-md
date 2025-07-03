@@ -42,14 +42,24 @@
     ]
   },
   "devDependencies": {
+    "@types/turndown": "^5.0.5",
     "@typescript-eslint/parser": "~8.32.0",
     "eslint": "^8.57.0",
     "eslint-plugin-n8n-nodes-base": "^1.16.3",
     "gulp": "^5.0.0",
     "prettier": "^3.5.3",
+    "rimraf": "^6.0.1",
     "typescript": "^5.8.2"
   },
   "peerDependencies": {
     "n8n-workflow": "*"
+  },
+  "dependencies": {
+    "@joplin/turndown": "^4.0.80",
+    "@joplin/turndown-plugin-gfm": "^1.0.62",
+    "mammoth": "^1.9.1",
+    "markdownlint": "^0.38.0",
+    "markdownlint-rule-helpers": "^0.29.0",
+    "node-html-parser": "^7.0.1"
   }
 }
