@@ -93,6 +93,7 @@ export class DocxToMd implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Docx to Markdown',
 		name: 'docxToMd',
+		icon: 'file:docxtomd.svg',
 		group: ['transform'],
 		version: 1,
 		description: 'Converts Docx file to Markdown',
