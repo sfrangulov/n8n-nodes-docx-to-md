@@ -3,7 +3,13 @@
   "version": "0.1.1",
   "description": "n8n node to convert Docx files to Markdown",
   "keywords": [
-    "n8n-community-node-package"
+    "n8n-community-node-package",
+    "n8n-nodes",
+    "n8n",
+    "n8n-docx-to-md",
+    "docx",
+    "markdown",
+    "convert"
   ],
   "license": "MIT",
   "homepage": "https://github.com/sfrangulov/n8n-nodes-docx-to-md",
