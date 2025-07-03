@@ -57,6 +57,15 @@ function htmlToMd(html: string, options: object = {}): string {
 		...defaultTurndownOptions,
 	});
 	turndownService.use(turndownPluginGfm.gfm);
+	turndownService.addRule('preserveAnchors', {
+		filter: function (node: any) {
+			return node.nodeName === 'A' && node.getAttribute('id') && !node.textContent.trim();
+		},
+		replacement: function (content: any, node: any) {
+			const id = node.getAttribute('id');
+			return `<a id="${id}"></a>`;
+		},
+	});
 	return turndownService.turndown(html).trim();
 }
 
