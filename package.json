@@ -1,19 +1,19 @@
 {
-  "name": "n8n-nodes-<...>",
+  "name": "n8n-nodes-docx-to-md",
   "version": "0.1.0",
-  "description": "",
+  "description": "n8n node to convert Docx files to Markdown",
   "keywords": [
     "n8n-community-node-package"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://github.com/sfrangulov/n8n-nodes-docx-to-md",
   "author": {
-    "name": "",
-    "email": ""
+    "name": "Sergei Frangulov",
+    "email": "sergey.frangulov@gmail.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/<...>/n8n-nodes-<...>.git"
+    "url": "https://github.com/sfrangulov/n8n-nodes-docx-to-md.git"
   },
   "engines": {
     "node": ">=20.15"
@@ -32,13 +32,9 @@
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
-    "credentials": [
-      "dist/credentials/ExampleCredentialsApi.credentials.js",
-      "dist/credentials/HttpBinApi.credentials.js"
-    ],
+    "credentials": [],
     "nodes": [
-      "dist/nodes/ExampleNode/ExampleNode.node.js",
-      "dist/nodes/HttpBin/HttpBin.node.js"
+      "dist/nodes/DocxToMd/DocxToMd.node.js"
     ]
   },
   "devDependencies": {
@@ -59,7 +55,6 @@
     "@joplin/turndown-plugin-gfm": "^1.0.62",
     "mammoth": "^1.9.1",
     "markdownlint": "^0.38.0",
-    "markdownlint-rule-helpers": "^0.29.0",
     "node-html-parser": "^7.0.1"
   }
 }

@@ -15,7 +15,7 @@ import * as mammoth from 'mammoth';
 // @ts-ignore
 const markdownlintSync = require('markdownlint/sync');
 // @ts-ignore
-const markdownlintRuleHelpers = require('markdownlint-rule-helpers');
+const markdownlint = require('markdownlint');
 import { parse } from 'node-html-parser';
 
 interface ConvertOptions {
@@ -68,7 +68,7 @@ async function lint(md: string): Promise<string> {
 		},
 	};
 	const lintResult = markdownlintSync.lint(options);
-	return markdownlintRuleHelpers.applyFixes(md, lintResult['content']).trim();
+	return markdownlint.applyFixes(md, lintResult['content']).trim();
 }
 
 // Converts a Word document to crisp, clean Markdown

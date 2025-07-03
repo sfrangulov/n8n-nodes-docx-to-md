@@ -20,9 +20,6 @@ importers:
       markdownlint:
         specifier: ^0.38.0
         version: 0.38.0
-      markdownlint-rule-helpers:
-        specifier: ^0.29.0
-        version: 0.29.0
       n8n-workflow:
         specifier: '*'
         version: 1.82.0
@@ -1197,10 +1194,6 @@ packages:
   map-cache@0.2.2:
     resolution: {integrity: sha512-8y/eV9QQZCiyn1SprXSrCmqJN0yNRATe+PO8ztwqrvrbdRLA3eYJF0yaR0YayLWkMbsQSKWS9N2gPcGEc4UsZg==}
     engines: {node: '>=0.10.0'}
-
-  markdownlint-rule-helpers@0.29.0:
-    resolution: {integrity: sha512-a03vOcfL2Cc2k+6RtUxdBMEDqcTDisL9YNwuC0IS1DEZnRpAHkt0ytaYSXzE4a4Ghz4B6R2wrgW+Y3Mb8QuSyQ==}
-    engines: {node: '>=18'}
 
   markdownlint@0.38.0:
     resolution: {integrity: sha512-xaSxkaU7wY/0852zGApM8LdlIfGCW8ETZ0Rr62IQtAnUMlMuifsg09vWJcNYeL4f0anvr8Vo4ZQar8jGpV0btQ==}
@@ -3234,8 +3227,6 @@ snapshots:
       xmlbuilder: 10.1.1
 
   map-cache@0.2.2: {}
-
-  markdownlint-rule-helpers@0.29.0: {}
 
   markdownlint@0.38.0:
     dependencies:
