@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-docx-to-md",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "n8n node to convert Docx files to Markdown",
   "keywords": [
     "n8n-community-node-package",
@@ -29,18 +29,15 @@
     "build": "npx rimraf dist && tsc && gulp build:icons",
     "dev": "tsc --watch",
     "format": "prettier nodes credentials --write",
-    "lint": "eslint nodes credentials package.json",
-    "lintfix": "eslint nodes credentials package.json --fix",
-    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+    "lint": "eslint nodes package.json",
+    "lintfix": "eslint nodes package.json --fix",
+    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes package.json"
   },
   "files": [
     "dist"
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
-    "credentials": [
-      "dist/credentials/DocxToMdCredentialsApi.credentials.js"
-    ],
     "nodes": [
       "dist/nodes/DocxToMd/DocxToMd.node.js"
     ]
@@ -56,7 +53,7 @@
     "typescript": "^5.8.2"
   },
   "peerDependencies": {
-    "n8n-workflow": "*"
+    "n8n-workflow": ">=1.0.0"
   },
   "dependencies": {
     "@joplin/turndown": "^4.0.80",

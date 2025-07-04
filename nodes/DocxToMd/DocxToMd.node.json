@@ -1,17 +1,17 @@
 {
-	"node": "n8n-nodes-base.DocxToMd",
+	"node": "n8n-nodes-docx-to-md.DocxToMd",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": ["Miscellaneous"],
 	"resources": {
 		"credentialDocumentation": [
 			{
-				"url": ""
+				"url": "https://github.com/sfrangulov/n8n-nodes-docx-to-md"
 			}
 		],
 		"primaryDocumentation": [
 			{
-				"url": ""
+				"url": "https://github.com/sfrangulov/n8n-nodes-docx-to-md"
 			}
 		]
 	}

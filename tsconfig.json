@@ -22,7 +22,7 @@
 		"outDir": "./dist/",
 	},
 	"include": [
-		"credentials/**/*",
+		"index.ts",
 		"nodes/**/*",
 		"nodes/**/*.json",
 		"package.json",
