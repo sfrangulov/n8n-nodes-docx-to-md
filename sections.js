@@ -1,93 +1,120 @@
+const sectionPrompts = {
+	'Лист изменений': `Заполнен лист изменений с датой, версией и автором?
+	Заполнено ли поле с сутью изменения?
+	Указано ли в каком разделе были сделаны изменения?`,
+	'Глоссарий (опционально)': `Присутствует ли глоссарий, если в тексте есть термины или сокращения?`,
+	'Предмет разработки': `Указано ли верхнеуровневое описание разработки на бизнес-языке из реестра разработок и уточнения?`,
+	'Релиз конфигурации': `Указаны ли номера версий конфигураций и требуемой платформы?`,
+	'Дизайн объектов Системы': `Названия объектов и реквизитов оформлены по naming convention?
+  Перечислен ли все объекты метаданных конфигурации, которые как добавляются, так и изменяются в ходе выполнения разработки по данной функциональной спецификации?
+  Указаны ли различные наборы свойств?
+  Описаны ли специфические алгоритмы, касающиеся этого объекта метаданных данных, например, алгоритм ввода на основании, механизм заполнения табличной части документа и так далее?
+  Для каждого объекта указано имя, синоним, тип данных, обязательность заполнения и назначение?
+  Указано, является ли объект или реквизит новым?
+  Есть ли обоснование длины строковых реквизитов?
+  Присутствует ли описание табличных частей?
+  Указаны роли и виды доступа к объектам?`,
+	'Описание общих алгоритмов': `Требуется ли изменение алгоритмов, которые напрямую не связаны с конкретными объектами метаданных, например, регламентные операции, алгоритмы запускающиеся из автоматизированных рабочих мест, алгоритмы запускаемые в результате интеграции данных и т.д.?
+  Если да, то описан ли способ заполнения реквизитов, правила валидации и правила заполнения?
+  Описано ли поведение интерфейса?
+  Приведено ли обоснование архитектурного решения?
+  Описаны ли исключительные ситуации при работе алгоритмов?
+  Указано ли архитектурное исключение или компромисс?`,
+	'Описание интеграционных интерфейсов': `Описаны ли механизмы интеграции?
+  Записаны ли существенные параметры и требования, касающиеся интеграционного потока, например, а также триггер(ы), по наступлению которых запускается процесс интеграции?`,
+	'Техническая реализация': `Зафиксирован ли факт изменения/добавления того или иного модуля, процедуры, функции, свойств объектов метаданных?`,
+	'Настройки системы, используемые разработкой': `Описаны ли настройки или иные данные, которые необходимы на уровне данных и настроек прикладного решение, в рамках которых будет работать разработка по данной функциональной спецификацией?`,
+	'Тестовый сценарий': `Описаны ли текстовые сценарии с полным, частичным и нулевым заполнением?
+  Указаны ли роли пользователя необходимые для работы доработки?
+  Приведены ли бизнес-данные для корректной работы?
+  Указаны ли ожидаемые результаты?`,
+};
+
 const sections = [
-  "Лист изменений",
-  "Глоссарий (опционально)",
-  "Предмет разработки",
-  "Релиз конфигурации",
-  "Дизайн объектов Системы",
-  "Описание общих алгоритмов",
-  "Описание интеграционных интерфейсов",
-  "Техническая реализация",
-  "Настройки системы, используемые разработкой",
-  "Тестовый сценарий",
+	'Лист изменений',
+	'Глоссарий (опционально)',
+	'Предмет разработки',
+	'Релиз конфигурации',
+	'Дизайн объектов Системы',
+	'Описание общих алгоритмов',
+	'Описание интеграционных интерфейсов',
+	'Техническая реализация',
+	'Настройки системы, используемые разработкой',
+	'Тестовый сценарий',
 ];
 
 const findMdLinks = (text) => {
-  const regex = /\[([^\]]+)\]\(([^)]+)\)/g;
-  let match;
-  const links = [];
-  while ((match = regex.exec(text)) !== null) {
-    links.push({ text: match[1], id: match[2] });
-  }
-  return links;
+	const regex = /\[([^\]]+)\]\(([^)]+)\)/g;
+	let match;
+	const links = [];
+	while ((match = regex.exec(text)) !== null) {
+		links.push({ text: match[1], id: match[2] });
+	}
+	return links;
 };
 
 const findNextSection = (currentSection, sections) => {
-  let currentIndex = sections.findIndex(
-    (section) => section.section === currentSection
-  );
-  if (currentIndex === -1 || currentIndex === sections.length - 1) {
-    return null;
-  }
-  while (currentIndex < sections.length - 1) {
-    const nextSection = sections[currentIndex + 1];
-    if (nextSection.id) {
-      return nextSection;
-    }
-    currentIndex++;
-  }
-  return null;
+	let currentIndex = sections.findIndex((section) => section.section === currentSection);
+	if (currentIndex === -1 || currentIndex === sections.length - 1) {
+		return null;
+	}
+	while (currentIndex < sections.length - 1) {
+		const nextSection = sections[currentIndex + 1];
+		if (nextSection.id) {
+			return nextSection;
+		}
+		currentIndex++;
+	}
+	return null;
 };
 
 const findPreviousLinebreak = (text, position) => {
-  const previousLinebreak = text.lastIndexOf("\n", position - 1);
-  if (previousLinebreak === -1) {
-    return 0; // Если нет предыдущего разрыва строки, начинаем с начала
-  }
-  return previousLinebreak + 1; // Возвращаем позицию после разрыва
+	const previousLinebreak = text.lastIndexOf('\n', position - 1);
+	if (previousLinebreak === -1) {
+		return 0; // Если нет предыдущего разрыва строки, начинаем с начала
+	}
+	return previousLinebreak + 1; // Возвращаем позицию после разрыва
 };
 
 const findMdAnchors = (text) => {
-  const regex = /<a id="([^"]+)"><\/a>/g;
-  let match;
-  const anchors = [];
-  while ((match = regex.exec(text)) !== null) {
-    anchors.push({
-      id: match[1],
-      position: findPreviousLinebreak(text, match.index),
-      fullMatch: match[0],
-    });
-  }
-  return anchors;
+	const regex = /<a id="([^"]+)"><\/a>/g;
+	let match;
+	const anchors = [];
+	while ((match = regex.exec(text)) !== null) {
+		anchors.push({
+			id: match[1],
+			position: findPreviousLinebreak(text, match.index),
+			fullMatch: match[0],
+		});
+	}
+	return anchors;
 };
 
 const getSections = (md) => {
-  const anchors = findMdAnchors(md);
-  const links = findMdLinks(md);
-  const result = sections.map((section) => {
-    const sectionLink = links.find((link) => link.text.includes(section));
-    return {
-      section,
-      text: "",
-      id: sectionLink ? sectionLink.id : null,
-      position: anchors.find((anchor) => `#${anchor.id}` === sectionLink?.id)
-        ?.position,
-    };
-  });
-  for (const section of result) {
-    if (!section.id) {
-      continue;
-    }
-    const nextSection = findNextSection(section.section, result);
-    section.text = md.substring(
-      section.position,
-      nextSection ? nextSection.position : undefined
-    );
-  }
-  return result;
+	const anchors = findMdAnchors(md);
+	const links = findMdLinks(md);
+	const result = sections.map((section) => {
+		const sectionLink = links.find((link) => link.text.includes(section));
+		return {
+			section,
+			text: '',
+			id: sectionLink ? sectionLink.id : null,
+			position: anchors.find((anchor) => `#${anchor.id}` === sectionLink?.id)?.position,
+			prompt: sectionPrompts[section] || '',
+		};
+	});
+	for (const section of result) {
+		if (!section.id) {
+			continue;
+		}
+		const nextSection = findNextSection(section.section, result);
+		section.text = md.substring(section.position, nextSection ? nextSection.position : undefined);
+	}
+	return result;
 };
 
 for (const item of $input.all()) {
-  item.json.sections = getSections(item.json.text);
+	item.json.sections = getSections(item.json.text);
 }
 
 return $input.all();
