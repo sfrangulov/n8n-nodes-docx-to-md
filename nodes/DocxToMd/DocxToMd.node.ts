@@ -21,6 +21,7 @@ import { parse } from 'node-html-parser';
 interface ConvertOptions {
 	mammoth?: object;
 	turndown?: object;
+	removeImages?: boolean;
 }
 
 interface TurndownOptions {
@@ -51,7 +52,7 @@ function autoTableHeaders(html: string): string {
 }
 
 // Convert HTML to GitHub-flavored Markdown
-function htmlToMd(html: string, options: object = {}): string {
+function htmlToMd(html: string, options: object = {}, removeImages: boolean = false): string {
 	const turndownService = new TurndownService({
 		...options,
 		...defaultTurndownOptions,
@@ -66,6 +67,17 @@ function htmlToMd(html: string, options: object = {}): string {
 			return `<a id="${id}"></a>`;
 		},
 	});
+
+	// Add rule to remove images if option is enabled
+	if (removeImages) {
+		turndownService.addRule('removeImages', {
+			filter: 'img',
+			replacement: function () {
+				return '';
+			},
+		});
+	}
+
 	return turndownService.turndown(html).trim();
 }
 
@@ -93,7 +105,7 @@ export default async function convert(
 	}
 	const mammothResult = await mammoth.convertToHtml(inputObj, options.mammoth);
 	const html = autoTableHeaders(mammothResult.value);
-	const md = htmlToMd(html, options.turndown);
+	const md = htmlToMd(html, options.turndown, options.removeImages);
 	const cleanedMd = await lint(md);
 	return cleanedMd;
 }
@@ -131,6 +143,13 @@ export class DocxToMd implements INodeType {
 				description: 'The name of the destination output field for the converted Markdown text',
 				required: true,
 			},
+			{
+				displayName: 'Remove Images',
+				name: 'removeImages',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to remove images from the converted Markdown',
+			},
 		],
 	};
 
@@ -141,6 +160,7 @@ export class DocxToMd implements INodeType {
 		for (let i = 0; i < items.length; i++) {
 			const inputBinaryField = this.getNodeParameter('inputBinaryField', i) as string;
 			const destinationOutputField = this.getNodeParameter('destinationOutputField', i) as string;
+			const removeImages = this.getNodeParameter('removeImages', i) as boolean;
 
 			const binaryData = await this.helpers.getBinaryDataBuffer(i, inputBinaryField);
 			if (!binaryData) {
@@ -150,7 +170,7 @@ export class DocxToMd implements INodeType {
 				);
 			}
 
-			const result = await convert(binaryData);
+			const result = await convert(binaryData, { removeImages });
 
 			returnData.push({
 				json: {
