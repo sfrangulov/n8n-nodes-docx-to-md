@@ -21,7 +21,7 @@ importers:
         specifier: ^0.38.0
         version: 0.38.0
       n8n-workflow:
-        specifier: '*'
+        specifier: '>=1.0.0'
         version: 1.82.0
       node-html-parser:
         specifier: ^7.0.1
