@@ -277,7 +277,11 @@ export class DocxToMd implements INodeType {
 						default: '-',
 						options: [
 							{ name: 'Dash (-)', value: '-' },
-							{ name: '[All]', value: '*' },
+							// The asterisk here is the literal bullet character, not the
+							// n8n "all" wildcard; the lint rule's auto-fix would rename it to
+							// the misleading "[All]".
+							// eslint-disable-next-line n8n-nodes-base/node-param-option-name-containing-star
+							{ name: 'Asterisk (*)', value: '*' },
 							{ name: 'Plus (+)', value: '+' },
 						],
 						description: 'Character used for unordered list items in the generated Markdown',
