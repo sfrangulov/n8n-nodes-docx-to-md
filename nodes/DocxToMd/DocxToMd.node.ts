@@ -40,7 +40,7 @@ const defaultTurndownOptions: TurndownOptions = {
 // of the table isn't `<th>` elements. This function
 // converts the first row of a table to `<th>` elements
 // so that it renders correctly in Markdown.
-function autoTableHeaders(html: string): string {
+export function autoTableHeaders(html: string): string {
 	const root = parse(html);
 	root.querySelectorAll('table').forEach((table: any) => {
 		const firstRow = table.querySelector('tr');
@@ -52,7 +52,7 @@ function autoTableHeaders(html: string): string {
 }
 
 // Convert HTML to GitHub-flavored Markdown
-function htmlToMd(html: string, options: object = {}, removeImages: boolean = false): string {
+export function htmlToMd(html: string, options: object = {}, removeImages: boolean = false): string {
 	const turndownService = new TurndownService({
 		...options,
 		...defaultTurndownOptions,
@@ -82,7 +82,7 @@ function htmlToMd(html: string, options: object = {}, removeImages: boolean = fa
 }
 
 // Lint the Markdown and correct any issues
-async function lint(md: string): Promise<string> {
+export async function lint(md: string): Promise<string> {
 	const options = {
 		strings: {
 			content: md,
@@ -93,15 +93,15 @@ async function lint(md: string): Promise<string> {
 }
 
 // Converts a Word document to crisp, clean Markdown
-export default async function convert(
-	input: string | ArrayBuffer,
+export async function convert(
+	input: string | Buffer | ArrayBuffer,
 	options: ConvertOptions = {},
 ): Promise<string> {
-	let inputObj: { path: string } | { buffer: ArrayBuffer };
+	let inputObj: { path: string } | { buffer: Buffer };
 	if (typeof input === 'string') {
 		inputObj = { path: input };
 	} else {
-		inputObj = { buffer: input };
+		inputObj = { buffer: Buffer.isBuffer(input) ? input : Buffer.from(input) };
 	}
 	const mammothResult = await mammoth.convertToHtml(inputObj, options.mammoth);
 	const html = autoTableHeaders(mammothResult.value);
