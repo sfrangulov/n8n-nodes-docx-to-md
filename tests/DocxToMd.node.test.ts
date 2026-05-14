@@ -319,6 +319,24 @@ describe('DocxToMd.execute', () => {
 		const out = result[0][0].json as { warnings?: string[] };
 		expect(Array.isArray(out.warnings)).toBe(true);
 	});
+
+	it('includes rawText in the output when Include Raw Text is on', async () => {
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: { includeRawText: true },
+			},
+			binaryBuffer: simpleBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		const out = result[0][0].json as { rawText?: string };
+		expect(typeof out.rawText).toBe('string');
+		expect(out.rawText).toContain('Hello World');
+	});
 });
 
 describe('DocxToMd.description', () => {

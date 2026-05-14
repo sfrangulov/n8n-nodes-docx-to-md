@@ -24,6 +24,7 @@ export interface ConvertOptions {
 	removeImages?: boolean;
 	lint?: boolean;
 	tableFirstRowAsHeader?: boolean;
+	rawText?: boolean;
 }
 
 interface TurndownOptions {
@@ -101,6 +102,7 @@ export async function lint(md: string): Promise<string> {
 export interface ConvertVerboseResult {
 	markdown: string;
 	warnings: string[];
+	rawText?: string;
 }
 
 export async function convertVerbose(
@@ -113,16 +115,26 @@ export async function convertVerbose(
 	} else {
 		inputObj = { buffer: Buffer.isBuffer(input) ? input : Buffer.from(input) };
 	}
-	const mammothResult = await mammoth.convertToHtml(inputObj, options.mammoth);
+
+	const [htmlResult, rawTextValue] = await Promise.all([
+		mammoth.convertToHtml(inputObj, options.mammoth),
+		options.rawText
+			? mammoth.extractRawText(inputObj).then((r: { value: string }) => r.value)
+			: Promise.resolve(undefined),
+	]);
+
 	const html = options.tableFirstRowAsHeader === false
-		? mammothResult.value
-		: autoTableHeaders(mammothResult.value);
+		? htmlResult.value
+		: autoTableHeaders(htmlResult.value);
 	const md = htmlToMd(html, options.turndown, options.removeImages);
 	const finalMd = options.lint === false ? md.trim() : await lint(md);
-	const warnings = mammothResult.messages.map(
+	const warnings = htmlResult.messages.map(
 		(m: { type: string; message: string }) => `[${m.type}] ${m.message}`,
 	);
-	return { markdown: finalMd, warnings };
+
+	const result: ConvertVerboseResult = { markdown: finalMd, warnings };
+	if (rawTextValue !== undefined) result.rawText = rawTextValue;
+	return result;
 }
 
 // Converts a Word document to crisp, clean Markdown
@@ -216,6 +228,13 @@ export class DocxToMd implements INodeType {
 						description: 'Whether headings use ATX (#) or Setext (underline) syntax',
 					},
 					{
+						displayName: 'Include Raw Text',
+						name: 'includeRawText',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to attach a plain-text extraction (via mammoth.extractRawText) to the JSON output under "rawText"',
+					},
+					{
 						displayName: 'Include Warnings',
 						name: 'includeWarnings',
 						type: 'boolean',
@@ -284,11 +303,13 @@ export class DocxToMd implements INodeType {
 				const convertOptions: ConvertOptions = { removeImages, turndown };
 				if (options.lintMarkdown === false) convertOptions.lint = false;
 				if (options.tableFirstRowAsHeader === false) convertOptions.tableFirstRowAsHeader = false;
+				if (options.includeRawText === true) convertOptions.rawText = true;
 
-				const { markdown, warnings } = await convertVerbose(binaryData, convertOptions);
+				const { markdown, warnings, rawText } = await convertVerbose(binaryData, convertOptions);
 
 				const jsonOut: IDataObject = { [destinationOutputField]: markdown };
 				if (options.includeWarnings === true) jsonOut.warnings = warnings;
+				if (options.includeRawText === true) jsonOut.rawText = rawText;
 
 				returnData.push({
 					json: jsonOut,

@@ -121,4 +121,16 @@ describe('convert', () => {
 		expect(markdown).toContain('# Hello World');
 		expect(Array.isArray(warnings)).toBe(true);
 	});
+
+	it('returns rawText alongside markdown when rawText = true', async () => {
+		const { markdown, rawText } = await convertVerbose(SIMPLE, { rawText: true });
+		expect(markdown).toContain('# Hello World');
+		expect(typeof rawText).toBe('string');
+		expect(rawText).toContain('Hello World');
+	});
+
+	it('omits rawText when not requested', async () => {
+		const { rawText } = await convertVerbose(SIMPLE);
+		expect(rawText).toBeUndefined();
+	});
 });
