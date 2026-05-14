@@ -277,7 +277,7 @@ export class DocxToMd implements INodeType {
 						default: '-',
 						options: [
 							{ name: 'Dash (-)', value: '-' },
-							{ name: 'Asterisk (*)', value: '*' },
+							{ name: '[All]', value: '*' },
 							{ name: 'Plus (+)', value: '+' },
 						],
 						description: 'Character used for unordered list items in the generated Markdown',
@@ -289,7 +289,7 @@ export class DocxToMd implements INodeType {
 						default: 'fenced',
 						options: [
 							{ name: 'Fenced (```)', value: 'fenced' },
-							{ name: 'Indented (4 spaces)', value: 'indented' },
+							{ name: 'Indented (4 Spaces)', value: 'indented' },
 						],
 						description: 'Whether code blocks are rendered as fenced or indented blocks',
 					},
@@ -355,9 +355,9 @@ export class DocxToMd implements INodeType {
 							},
 						},
 						options: [
-							{ name: 'Binary Key (![](image_1))', value: 'binaryKey' },
-							{ name: 'None (drop references)', value: 'none' },
-							{ name: 'Placeholder ([[image_1]])', value: 'placeholder' },
+							{ name: 'Binary Key (![](Image_1))', value: 'binaryKey' },
+							{ name: 'None (Drop References)', value: 'none' },
+							{ name: 'Placeholder ([[Image_1]])', value: 'placeholder' },
 						],
 						description: 'How extracted images are referenced inside the Markdown',
 					},
