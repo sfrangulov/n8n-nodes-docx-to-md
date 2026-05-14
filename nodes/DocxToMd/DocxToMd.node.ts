@@ -38,6 +38,10 @@ const defaultTurndownOptions: TurndownOptions = {
 	bulletListMarker: '-',
 };
 
+function hasZipSignature(buf: Buffer): boolean {
+	return buf.length >= 4 && buf[0] === 0x50 && buf[1] === 0x4B && buf[2] === 0x03 && buf[3] === 0x04;
+}
+
 // Turndown will add an empty header if the first row
 // of the table isn't `<th>` elements. This function
 // converts the first row of a table to `<th>` elements
@@ -209,6 +213,13 @@ export class DocxToMd implements INodeType {
 						default: true,
 						description: 'Whether to promote the first row of each table to header cells',
 					},
+					{
+						displayName: 'Validate Docx Signature',
+						name: 'validateDocxSignature',
+						type: 'boolean',
+						default: true,
+						description: 'Whether to reject binary input that does not start with the .docx (ZIP) magic signature',
+					},
 				],
 			},
 		],
@@ -234,6 +245,15 @@ export class DocxToMd implements INodeType {
 					throw new NodeOperationError(
 						this.getNode(),
 						`No binary data found for field "${inputBinaryField}"`,
+						{ itemIndex: i },
+					);
+				}
+
+				const validateSig = options.validateDocxSignature !== false;
+				if (validateSig && !hasZipSignature(binaryData)) {
+					throw new NodeOperationError(
+						this.getNode(),
+						'Input is not a valid .docx file (expected ZIP signature PK\\x03\\x04)',
 						{ itemIndex: i },
 					);
 				}

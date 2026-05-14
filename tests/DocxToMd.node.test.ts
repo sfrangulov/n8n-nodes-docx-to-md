@@ -247,6 +247,45 @@ describe('DocxToMd.execute', () => {
 		const out = result[0][0].json as { text: string };
 		expect(out.text).toContain('# Hello World');
 	});
+
+	it('rejects non-docx input with a signature error when validation is on', async () => {
+		const notDocx = Buffer.from('hello world');
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: { validateDocxSignature: true },
+			},
+			binaryBuffer: notDocx,
+		});
+		const node = new DocxToMd();
+		await expect(node.execute.call(ctx)).rejects.toThrow(
+			/Input is not a valid \.docx file/,
+		);
+	});
+
+	it('bypasses signature validation when validateDocxSignature = false', async () => {
+		// Mammoth will fail on a non-docx buffer, but the failure now comes from
+		// mammoth, not from our signature check.
+		const notDocx = Buffer.from('hello world');
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: { validateDocxSignature: false },
+			},
+			binaryBuffer: notDocx,
+		});
+		const node = new DocxToMd();
+		// Whatever mammoth throws, it must NOT be our signature error.
+		await expect(node.execute.call(ctx)).rejects.not.toThrow(
+			/Input is not a valid \.docx file/,
+		);
+	});
 });
 
 describe('DocxToMd.description', () => {
