@@ -68,7 +68,54 @@ The Docx to Markdown node supports the following operation:
 |-----------|------|---------|-------------|
 | Input Binary Field | String | "data" | Name of the field containing the Word document binary data |
 | Destination Output Field | String | "text" | Name of the field where converted Markdown will be stored |
-| Remove Images | Boolean | false | Whether to remove all images from the converted Markdown |
+| Remove Images | Boolean | false | Whether to remove all images from the converted Markdown. Ignored when Options > Extract Images is on. |
+
+### Options Collection
+
+All fields below live inside the **Options** group on the node. They are
+optional, alphabetised, and default to current behaviour so existing workflows
+keep working.
+
+| Option | Type | Default | What it does |
+|---|---|---|---|
+| Bullet List Marker | enum (`-` / `*` / `+`) | `-` | Character used for unordered list items. |
+| Code Block Style | enum (`fenced` / `indented`) | `fenced` | How code blocks are rendered. |
+| Custom Style Map | list of `{from, to}` pairs | empty | Mammoth style-map rules. See [Mammoth.js styleMap docs](https://github.com/mwilliamson/mammoth.js/#custom-style-map). |
+| Extract Images | boolean | `false` | Output embedded images as binary fields (`image_1`, `image_2`, …) alongside the JSON. |
+| Heading Style | enum (`atx` / `setext`) | `atx` | ATX (`# Heading`) vs Setext (underline) syntax. |
+| Image Link Format | enum (`binaryKey` / `none` / `placeholder`) | `binaryKey` | Only when **Extract Images** is on. Choose `![](image_1)`, no reference at all, or `[[image_1]]` for downstream templating. |
+| Include Raw Text | boolean | `false` | Attach `rawText` (via `mammoth.extractRawText`) to the JSON output. Useful for embeddings and search. |
+| Include Warnings | boolean | `false` | Attach `warnings: string[]` (from mammoth's `messages`) to the JSON output. |
+| Lint Markdown | boolean | `true` | Run `markdownlint --fix` on the output. Turn off to keep raw turndown output. |
+| Table First Row as Header | boolean | `true` | Promote the first row of each table to header cells. |
+| Validate Docx Signature | boolean | `true` | Reject input that doesn't begin with the `.docx` (ZIP) magic signature. |
+
+### Output Shape
+
+By default the output is `{ json: { [destinationOutputField]: markdown } }`.
+When options are enabled additional keys appear:
+
+```json
+{
+  "json": {
+    "text": "<markdown>",
+    "warnings": ["[warning] Unrecognized paragraph style 'Quote'"],
+    "rawText": "<plain text>"
+  },
+  "binary": {
+    "image_1": { "data": "<base64>", "mimeType": "image/png", "fileName": "image_1.png" }
+  }
+}
+```
+
+`warnings` appears only when **Include Warnings** is on; `rawText` only when
+**Include Raw Text** is on; `binary` only when **Extract Images** is on.
+
+### Error Handling
+
+The node honours n8n's `continueOnFail` setting. When enabled, a failing item
+becomes an error item — `{ json: { error: "<message>" }, error: NodeOperationError, pairedItem: { item: i } }` —
+instead of halting the batch.
 
 ### Example Workflow
 
