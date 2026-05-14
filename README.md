@@ -6,7 +6,7 @@
 
 [![npm version](https://img.shields.io/npm/v/n8n-nodes-docx-to-md.svg?color=brightgreen)](https://www.npmjs.com/package/n8n-nodes-docx-to-md)
 [![npm downloads](https://img.shields.io/npm/dm/n8n-nodes-docx-to-md.svg)](https://www.npmjs.com/package/n8n-nodes-docx-to-md)
-[![CI](https://github.com/sfrangulov/n8n-nodes-docx-to-md/actions/workflows/ci.yml/badge.svg)](https://github.com/sfrangulov/n8n-nodes-docx-to-md/actions/workflows/ci.yml)
+[![CI](https://github.com/sfrangulov/n8n-nodes-docx-to-md/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/sfrangulov/n8n-nodes-docx-to-md/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/sfrangulov/n8n-nodes-docx-to-md/branch/master/graph/badge.svg)](https://codecov.io/gh/sfrangulov/n8n-nodes-docx-to-md)
 [![License: MIT](https://img.shields.io/npm/l/n8n-nodes-docx-to-md.svg)](https://github.com/sfrangulov/n8n-nodes-docx-to-md/blob/master/LICENSE.md)
 [![Node Version](https://img.shields.io/node/v/n8n-nodes-docx-to-md.svg)](https://nodejs.org)
