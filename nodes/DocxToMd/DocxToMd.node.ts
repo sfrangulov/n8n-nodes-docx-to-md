@@ -3,7 +3,6 @@ import type {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
-	IDataObject,
 } from 'n8n-workflow';
 import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
 
@@ -155,30 +154,46 @@ export class DocxToMd implements INodeType {
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
-		const returnData: IDataObject[] = [];
+		const returnData: INodeExecutionData[] = [];
 
 		for (let i = 0; i < items.length; i++) {
-			const inputBinaryField = this.getNodeParameter('inputBinaryField', i) as string;
-			const destinationOutputField = this.getNodeParameter('destinationOutputField', i) as string;
-			const removeImages = this.getNodeParameter('removeImages', i) as boolean;
+			try {
+				const inputBinaryField = this.getNodeParameter('inputBinaryField', i) as string;
+				const destinationOutputField = this.getNodeParameter('destinationOutputField', i) as string;
+				const removeImages = this.getNodeParameter('removeImages', i) as boolean;
 
-			const binaryData = await this.helpers.getBinaryDataBuffer(i, inputBinaryField);
-			if (!binaryData) {
-				throw new NodeOperationError(
-					this.getNode(),
-					`No binary data found for field "${inputBinaryField}"`,
-				);
+				const binaryData = await this.helpers.getBinaryDataBuffer(i, inputBinaryField);
+				if (!binaryData) {
+					throw new NodeOperationError(
+						this.getNode(),
+						`No binary data found for field "${inputBinaryField}"`,
+						{ itemIndex: i },
+					);
+				}
+
+				const result = await convert(binaryData, { removeImages });
+
+				returnData.push({
+					json: { [destinationOutputField]: result },
+					pairedItem: { item: i },
+				});
+			} catch (err) {
+				if (this.continueOnFail()) {
+					returnData.push({
+						json: { error: (err as Error).message },
+						error: err instanceof NodeOperationError
+							? err
+							: new NodeOperationError(this.getNode(), err as Error, { itemIndex: i }),
+						pairedItem: { item: i },
+					});
+					continue;
+				}
+				throw err instanceof NodeOperationError
+					? err
+					: new NodeOperationError(this.getNode(), err as Error, { itemIndex: i });
 			}
-
-			const result = await convert(binaryData, { removeImages });
-
-			returnData.push({
-				json: {
-					[destinationOutputField]: result,
-				},
-			});
 		}
 
-		return [this.helpers.returnJsonArray(returnData)];
+		return [returnData];
 	}
 }

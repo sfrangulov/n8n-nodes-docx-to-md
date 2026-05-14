@@ -15,15 +15,16 @@ function makeContext(opts: {
 	itemCount: number;
 	params: Params;
 	binaryBuffer: Buffer | null;
+	continueOnFail?: boolean;
 }): IExecuteFunctions {
 	const items = Array.from({ length: opts.itemCount }, (_, i) => ({ json: { idx: i } }));
 	const ctx = {
 		getInputData: () => items,
 		getNodeParameter: (name: keyof Params) => opts.params[name],
 		getNode: () => ({ name: 'Docx to Markdown', type: 'docxToMd', typeVersion: 1 }),
+		continueOnFail: () => opts.continueOnFail === true,
 		helpers: {
 			getBinaryDataBuffer: async () => opts.binaryBuffer,
-			// Mirrors n8n's behavior: items already wrapped with { json } are passed through.
 			returnJsonArray: (data: Array<Record<string, unknown>>): INodeExecutionData[] =>
 				data.map((item) =>
 					'json' in item ? (item as INodeExecutionData) : { json: item as INodeExecutionData['json'] },
@@ -108,6 +109,54 @@ describe('DocxToMd.execute', () => {
 		const out = result[0][0].json as { text: string };
 		expect(out.text).not.toMatch(/!\[/);
 		expect(out.text).toContain('Before image.');
+	});
+
+	it('continues on fail and emits an error item when continueOnFail is true', async () => {
+		const ctx = makeContext({
+			itemCount: 1,
+			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false },
+			binaryBuffer: null,
+			continueOnFail: true,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		expect(result[0]).toHaveLength(1);
+		const out = result[0][0];
+		expect(out.json).toMatchObject({ error: expect.stringMatching(/No binary data/) });
+		expect(out.error).toBeDefined();
+		expect(out.pairedItem).toEqual({ item: 0 });
+	});
+
+	it('wraps a non-NodeOperationError as NodeOperationError when continueOnFail is true', async () => {
+		// Pass invalid bytes so mammoth throws a generic Error (not NodeOperationError)
+		const invalidBuf = Buffer.from('not a docx file');
+		const ctx = makeContext({
+			itemCount: 1,
+			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false },
+			binaryBuffer: invalidBuf,
+			continueOnFail: true,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		expect(result[0]).toHaveLength(1);
+		const out = result[0][0];
+		expect(out.json).toHaveProperty('error');
+		expect(out.error).toBeDefined();
+		expect(out.pairedItem).toEqual({ item: 0 });
+	});
+
+	it('wraps a non-NodeOperationError as NodeOperationError when continueOnFail is false', async () => {
+		// Pass invalid bytes so mammoth throws a generic Error (not NodeOperationError)
+		const invalidBuf = Buffer.from('not a docx file');
+		const ctx = makeContext({
+			itemCount: 1,
+			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false },
+			binaryBuffer: invalidBuf,
+			continueOnFail: false,
+		});
+		const node = new DocxToMd();
+		const { NodeOperationError: NOE } = await import('n8n-workflow');
+		await expect(node.execute.call(ctx)).rejects.toBeInstanceOf(NOE);
 	});
 });
 
