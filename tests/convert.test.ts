@@ -81,4 +81,12 @@ describe('convert', () => {
 		const md = await convert(SIMPLE);
 		expect(md).toContain('```\nconst x = 1;\n```');
 	});
+
+	it('skips the markdownlint pass when lint = false', async () => {
+		const lintedDefault = await convert(SIMPLE);
+		const unlinted = await convert(SIMPLE, { lint: false });
+		expect(unlinted).toContain('# Hello World');
+		// Linted output is trimmed; unlinted should be at least as long.
+		expect(unlinted.length).toBeGreaterThanOrEqual(lintedDefault.length);
+	});
 });

@@ -18,10 +18,11 @@ const markdownlintSync = require('markdownlint/sync');
 const markdownlint = require('markdownlint');
 import { parse } from 'node-html-parser';
 
-interface ConvertOptions {
+export interface ConvertOptions {
 	mammoth?: object;
 	turndown?: object;
 	removeImages?: boolean;
+	lint?: boolean;
 }
 
 interface TurndownOptions {
@@ -106,8 +107,8 @@ export async function convert(
 	const mammothResult = await mammoth.convertToHtml(inputObj, options.mammoth);
 	const html = autoTableHeaders(mammothResult.value);
 	const md = htmlToMd(html, options.turndown, options.removeImages);
-	const cleanedMd = await lint(md);
-	return cleanedMd;
+	if (options.lint === false) return md.trim();
+	return lint(md);
 }
 
 export class DocxToMd implements INodeType {
@@ -191,6 +192,13 @@ export class DocxToMd implements INodeType {
 						],
 						description: 'Whether headings use ATX (#) or Setext (underline) syntax',
 					},
+					{
+						displayName: 'Lint Markdown',
+						name: 'lintMarkdown',
+						type: 'boolean',
+						default: true,
+						description: 'Whether to run markdownlint auto-fix on the converted Markdown. Disable to keep raw turndown output.',
+					},
 				],
 			},
 		],
@@ -220,7 +228,10 @@ export class DocxToMd implements INodeType {
 					);
 				}
 
-				const result = await convert(binaryData, { removeImages, turndown });
+				const convertOptions: ConvertOptions = { removeImages, turndown };
+				if (options.lintMarkdown === false) convertOptions.lint = false;
+
+				const result = await convert(binaryData, convertOptions);
 
 				returnData.push({
 					json: { [destinationOutputField]: result },

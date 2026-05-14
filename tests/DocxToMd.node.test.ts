@@ -206,6 +206,23 @@ describe('DocxToMd.execute', () => {
 		const out = result[0][0].json as { text: string };
 		expect(out.text).toMatch(/^ {4}const x = 1;/m);
 	});
+
+	it('skips markdownlint when Options.lintMarkdown = false', async () => {
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: { lintMarkdown: false },
+			},
+			binaryBuffer: simpleBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		const out = result[0][0].json as { text: string };
+		expect(out.text).toContain('# Hello World');
+	});
 });
 
 describe('DocxToMd.description', () => {
