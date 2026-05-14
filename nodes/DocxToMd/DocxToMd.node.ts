@@ -18,6 +18,13 @@ const markdownlintSync = require('markdownlint/sync');
 const markdownlint = require('markdownlint');
 import { parse } from 'node-html-parser';
 
+export interface ExtractedImage {
+	key: string;
+	buffer: Buffer;
+	mimeType: string;
+	extension: string;
+}
+
 export interface ConvertOptions {
 	mammoth?: object;
 	turndown?: object;
@@ -25,6 +32,8 @@ export interface ConvertOptions {
 	lint?: boolean;
 	tableFirstRowAsHeader?: boolean;
 	rawText?: boolean;
+	extractImages?: boolean;
+	imageLinkFormat?: 'binaryKey' | 'none' | 'placeholder';
 }
 
 interface TurndownOptions {
@@ -38,6 +47,18 @@ const defaultTurndownOptions: TurndownOptions = {
 	codeBlockStyle: 'fenced',
 	bulletListMarker: '-',
 };
+
+export function extensionFor(mime: string): string {
+	const m = mime.toLowerCase();
+	if (m === 'image/jpeg' || m === 'image/jpg') return 'jpg';
+	if (m === 'image/png') return 'png';
+	if (m === 'image/gif') return 'gif';
+	if (m === 'image/webp') return 'webp';
+	if (m === 'image/svg+xml') return 'svg';
+	if (m === 'image/bmp') return 'bmp';
+	if (m === 'image/tiff') return 'tiff';
+	return 'bin';
+}
 
 function hasZipSignature(buf: Buffer): boolean {
 	return buf.length >= 4 && buf[0] === 0x50 && buf[1] === 0x4B && buf[2] === 0x03 && buf[3] === 0x04;
@@ -69,8 +90,13 @@ export function autoTableHeaders(html: string): string {
 	return root.toString();
 }
 
-// Convert HTML to GitHub-flavored Markdown
-export function htmlToMd(html: string, options: object = {}, removeImages: boolean = false): string {
+// Convert HTML to Markdown with configurable image handling
+function htmlToMdWithImageRule(
+	html: string,
+	options: object = {},
+	removeImages: boolean = false,
+	imageLinkFormat: 'binaryKey' | 'none' | 'placeholder' = 'binaryKey',
+): string {
 	const turndownService = new TurndownService({
 		...defaultTurndownOptions,
 		...options,
@@ -85,8 +111,6 @@ export function htmlToMd(html: string, options: object = {}, removeImages: boole
 			return `<a id="${id}"></a>`;
 		},
 	});
-
-	// Add rule to remove images if option is enabled
 	if (removeImages) {
 		turndownService.addRule('removeImages', {
 			filter: 'img',
@@ -94,9 +118,29 @@ export function htmlToMd(html: string, options: object = {}, removeImages: boole
 				return '';
 			},
 		});
+	} else if (imageLinkFormat === 'none') {
+		turndownService.addRule('dropImages', {
+			filter: 'img',
+			replacement: function () {
+				return '';
+			},
+		});
+	} else if (imageLinkFormat === 'placeholder') {
+		turndownService.addRule('placeholderImages', {
+			filter: 'img',
+			replacement: function (_content: any, node: any) {
+				// istanbul ignore next
+				const src = node.getAttribute('src') || '';
+				return `[[${src}]]`;
+			},
+		});
 	}
-
 	return turndownService.turndown(html).trim();
+}
+
+// Convert HTML to GitHub-flavored Markdown (thin wrapper kept for external compatibility)
+export function htmlToMd(html: string, options?: object, removeImages?: boolean): string {
+	return htmlToMdWithImageRule(html, options, removeImages);
 }
 
 // Lint the Markdown and correct any issues
@@ -114,6 +158,7 @@ export interface ConvertVerboseResult {
 	markdown: string;
 	warnings: string[];
 	rawText?: string;
+	images?: ExtractedImage[];
 }
 
 export async function convertVerbose(
@@ -127,8 +172,22 @@ export async function convertVerbose(
 		inputObj = { buffer: Buffer.isBuffer(input) ? input : Buffer.from(input) };
 	}
 
+	const images: ExtractedImage[] = [];
+	const mammothOptions: Record<string, unknown> = { ...(options.mammoth ?? {}) };
+
+	if (options.extractImages) {
+		mammothOptions.convertImage = mammoth.images.imgElement(async (image: any) => {
+			const buffer = await image.readAsBuffer();
+			// istanbul ignore next
+			const mimeType: string = image.contentType || 'application/octet-stream';
+			const key = `image_${images.length + 1}`;
+			images.push({ key, buffer, mimeType, extension: extensionFor(mimeType) });
+			return { src: key };
+		});
+	}
+
 	const [htmlResult, rawTextValue] = await Promise.all([
-		mammoth.convertToHtml(inputObj, options.mammoth),
+		mammoth.convertToHtml(inputObj, mammothOptions),
 		options.rawText
 			? mammoth.extractRawText(inputObj).then((r: { value: string }) => r.value)
 			: Promise.resolve(undefined),
@@ -137,14 +196,25 @@ export async function convertVerbose(
 	const html = options.tableFirstRowAsHeader === false
 		? htmlResult.value
 		: autoTableHeaders(htmlResult.value);
-	const md = htmlToMd(html, options.turndown, options.removeImages);
+
+	// extractImages wins over removeImages
+	const effectiveRemoveImages = options.extractImages ? false : !!options.removeImages;
+	const linkFormat = options.imageLinkFormat ?? 'binaryKey';
+	const md = htmlToMdWithImageRule(
+		html,
+		options.turndown,
+		effectiveRemoveImages,
+		options.extractImages ? linkFormat : 'binaryKey',
+	);
 	const finalMd = options.lint === false ? md.trim() : await lint(md);
+
 	const warnings = htmlResult.messages.map(
 		(m: { type: string; message: string }) => `[${m.type}] ${m.message}`,
 	);
 
 	const result: ConvertVerboseResult = { markdown: finalMd, warnings };
 	if (rawTextValue !== undefined) result.rawText = rawTextValue;
+	if (options.extractImages) result.images = images;
 	return result;
 }
 
@@ -195,7 +265,7 @@ export class DocxToMd implements INodeType {
 				name: 'removeImages',
 				type: 'boolean',
 				default: false,
-				description: 'Whether to remove images from the converted Markdown',
+				description: 'Whether to strip images from the converted Markdown. Ignored when Options > Extract Images is on.',
 			},
 			{
 				displayName: 'Options',
@@ -261,6 +331,13 @@ export class DocxToMd implements INodeType {
 						],
 					},
 					{
+						displayName: 'Extract Images',
+						name: 'extractImages',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to output embedded images as separate binary fields alongside the JSON. Wins over Remove Images when both are set.',
+					},
+					{
 						displayName: 'Heading Style',
 						name: 'headingStyle',
 						type: 'options',
@@ -270,6 +347,23 @@ export class DocxToMd implements INodeType {
 							{ name: 'Setext (Heading\\n===)', value: 'setext' },
 						],
 						description: 'Whether headings use ATX (#) or Setext (underline) syntax',
+					},
+					{
+						displayName: 'Image Link Format',
+						name: 'imageLinkFormat',
+						type: 'options',
+						default: 'binaryKey',
+						displayOptions: {
+							show: {
+								extractImages: [true],
+							},
+						},
+						options: [
+							{ name: 'Binary Key (![](image_1))', value: 'binaryKey' },
+							{ name: 'None (drop references)', value: 'none' },
+							{ name: 'Placeholder ([[image_1]])', value: 'placeholder' },
+						],
+						description: 'How extracted images are referenced inside the Markdown',
 					},
 					{
 						displayName: 'Include Raw Text',
@@ -354,16 +448,33 @@ export class DocxToMd implements INodeType {
 				if (options.tableFirstRowAsHeader === false) convertOptions.tableFirstRowAsHeader = false;
 				if (options.includeRawText === true) convertOptions.rawText = true;
 
-				const { markdown, warnings, rawText } = await convertVerbose(binaryData, convertOptions);
+				if (options.extractImages === true) {
+					convertOptions.extractImages = true;
+					if (typeof options.imageLinkFormat === 'string') {
+						convertOptions.imageLinkFormat = options.imageLinkFormat as ConvertOptions['imageLinkFormat'];
+					}
+				}
+
+				const { markdown, warnings, rawText, images } = await convertVerbose(binaryData, convertOptions);
 
 				const jsonOut: IDataObject = { [destinationOutputField]: markdown };
 				if (options.includeWarnings === true) jsonOut.warnings = warnings;
 				if (options.includeRawText === true) jsonOut.rawText = rawText;
 
-				returnData.push({
+				const item: INodeExecutionData = {
 					json: jsonOut,
 					pairedItem: { item: i },
-				});
+				};
+
+				if (options.extractImages === true && images && images.length > 0) {
+					item.binary = {};
+					for (const img of images) {
+						const fileName = `${img.key}.${img.extension}`;
+						item.binary[img.key] = await this.helpers.prepareBinaryData(img.buffer, fileName, img.mimeType);
+					}
+				}
+
+				returnData.push(item);
 			} catch (err) {
 				const wrapped =
 					err instanceof NodeOperationError

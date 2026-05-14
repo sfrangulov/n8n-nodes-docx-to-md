@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { convert, convertVerbose } from '../nodes/DocxToMd/DocxToMd.node';
+import { convert, convertVerbose, extensionFor } from '../nodes/DocxToMd/DocxToMd.node';
 
 const FIXTURES = path.join(__dirname, 'fixtures');
 const SIMPLE = path.join(FIXTURES, 'simple.docx');
@@ -141,5 +141,64 @@ describe('convert', () => {
 		});
 		expect(md).toMatch(/^>\s+This paragraph uses a custom style\./m);
 		expect(md).toContain('Regular paragraph.');
+	});
+
+	it('extracts images as buffers when extractImages = true', async () => {
+		const buf = fs.readFileSync(WITH_IMAGE);
+		const { markdown, images } = await convertVerbose(buf, { extractImages: true });
+		expect(images).toBeDefined();
+		expect(images!.length).toBe(1);
+		expect(images![0].key).toBe('image_1');
+		expect(Buffer.isBuffer(images![0].buffer)).toBe(true);
+		expect(images![0].mimeType).toBe('image/png');
+		expect(images![0].extension).toBe('png');
+		// Default link format is binaryKey: MD references image_1
+		expect(markdown).toMatch(/!\[\]\(image_1\)/);
+		expect(markdown).not.toMatch(/data:image/);
+	});
+
+	it('drops MD image references when imageLinkFormat = none', async () => {
+		const buf = fs.readFileSync(WITH_IMAGE);
+		const { markdown, images } = await convertVerbose(buf, {
+			extractImages: true,
+			imageLinkFormat: 'none',
+		});
+		expect(images!.length).toBe(1);
+		expect(markdown).not.toMatch(/!\[/);
+	});
+
+	it('emits placeholders when imageLinkFormat = placeholder', async () => {
+		const buf = fs.readFileSync(WITH_IMAGE);
+		const { markdown, images } = await convertVerbose(buf, {
+			extractImages: true,
+			imageLinkFormat: 'placeholder',
+		});
+		expect(images!.length).toBe(1);
+		expect(markdown).toContain('[[image_1]]');
+	});
+
+	it('extractImages wins over removeImages when both are true', async () => {
+		const buf = fs.readFileSync(WITH_IMAGE);
+		const { markdown, images } = await convertVerbose(buf, {
+			extractImages: true,
+			removeImages: true,
+		});
+		expect(images).toBeDefined();
+		expect(images!.length).toBe(1);
+		// extractImages wins: image ref should be present, not stripped
+		expect(markdown).toMatch(/!\[\]\(image_1\)/);
+	});
+
+	describe('extensionFor', () => {
+		it('returns jpg for image/jpeg', () => expect(extensionFor('image/jpeg')).toBe('jpg'));
+		it('returns jpg for image/jpg', () => expect(extensionFor('image/jpg')).toBe('jpg'));
+		it('returns png for image/png', () => expect(extensionFor('image/png')).toBe('png'));
+		it('returns gif for image/gif', () => expect(extensionFor('image/gif')).toBe('gif'));
+		it('returns webp for image/webp', () => expect(extensionFor('image/webp')).toBe('webp'));
+		it('returns svg for image/svg+xml', () => expect(extensionFor('image/svg+xml')).toBe('svg'));
+		it('returns bmp for image/bmp', () => expect(extensionFor('image/bmp')).toBe('bmp'));
+		it('returns tiff for image/tiff', () => expect(extensionFor('image/tiff')).toBe('tiff'));
+		it('returns bin for unknown mime type', () => expect(extensionFor('application/octet-stream')).toBe('bin'));
+		it('is case-insensitive', () => expect(extensionFor('IMAGE/PNG')).toBe('png'));
 	});
 });

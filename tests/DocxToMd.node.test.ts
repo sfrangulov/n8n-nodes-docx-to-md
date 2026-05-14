@@ -27,6 +27,11 @@ function makeContext(opts: {
 		continueOnFail: () => opts.continueOnFail === true,
 		helpers: {
 			getBinaryDataBuffer: async () => opts.binaryBuffer,
+			prepareBinaryData: async (data: Buffer, fileName: string, mimeType: string) => ({
+				data: data.toString('base64'),
+				mimeType,
+				fileName,
+			}),
 		},
 	};
 	return ctx as unknown as IExecuteFunctions;
@@ -377,6 +382,86 @@ describe('DocxToMd.execute', () => {
 		const result = await node.execute.call(ctx);
 		const out = result[0][0].json as { text: string };
 		expect(out.text).toContain('# Hello World');
+	});
+
+	it('emits binary outputs and MD refs when Extract Images is on', async () => {
+		const imageBuf = fs.readFileSync(path.join(FIXTURES, 'with-image.docx'));
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: { extractImages: true },
+			},
+			binaryBuffer: imageBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		const item = result[0][0];
+		expect(item.binary).toBeDefined();
+		expect(item.binary).toHaveProperty('image_1');
+		expect(item.binary!.image_1).toMatchObject({
+			mimeType: 'image/png',
+			fileName: 'image_1.png',
+		});
+		expect((item.json as { text: string }).text).toMatch(/!\[\]\(image_1\)/);
+	});
+
+	it('drops MD refs when imageLinkFormat is none', async () => {
+		const imageBuf = fs.readFileSync(path.join(FIXTURES, 'with-image.docx'));
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: { extractImages: true, imageLinkFormat: 'none' },
+			},
+			binaryBuffer: imageBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		const item = result[0][0];
+		expect(item.binary).toHaveProperty('image_1');
+		expect((item.json as { text: string }).text).not.toMatch(/!\[/);
+	});
+
+	it('emits placeholders when imageLinkFormat is placeholder', async () => {
+		const imageBuf = fs.readFileSync(path.join(FIXTURES, 'with-image.docx'));
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: { extractImages: true, imageLinkFormat: 'placeholder' },
+			},
+			binaryBuffer: imageBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		const item = result[0][0];
+		expect((item.json as { text: string }).text).toContain('[[image_1]]');
+	});
+
+	it('extractImages wins over removeImages at the execute level', async () => {
+		const imageBuf = fs.readFileSync(path.join(FIXTURES, 'with-image.docx'));
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: true,
+				options: { extractImages: true },
+			},
+			binaryBuffer: imageBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		const item = result[0][0];
+		expect(item.binary).toHaveProperty('image_1');
+		expect((item.json as { text: string }).text).toMatch(/!\[\]\(image_1\)/);
 	});
 });
 
