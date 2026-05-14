@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { convert } from '../nodes/DocxToMd/DocxToMd.node';
+import { convert, convertVerbose } from '../nodes/DocxToMd/DocxToMd.node';
 
 const FIXTURES = path.join(__dirname, 'fixtures');
 const SIMPLE = path.join(FIXTURES, 'simple.docx');
@@ -101,5 +101,24 @@ describe('convert', () => {
 		expect(md).toContain('Header A');
 		expect(md).toContain('Row 1 A');
 		expect(md).not.toMatch(/\|\s*Header A\s*\|\s*Header B\s*\|\s*\n\s*\|\s*-+\s*\|/);
+	});
+
+	it('exposes mammoth warnings via convertVerbose', async () => {
+		// Reading via path makes mammoth verify the document fully — warnings appear
+		// for any unrecognised style. Our fixtures don't trigger warnings, so use
+		// a custom style map that references an unknown style to force one.
+		const buf = fs.readFileSync(SIMPLE);
+		const { markdown, warnings } = await convertVerbose(buf, {
+			mammoth: { styleMap: "p[style-name='Nonexistent Style'] => h2:fresh" },
+		});
+		expect(markdown).toContain('# Hello World');
+		expect(Array.isArray(warnings)).toBe(true);
+	});
+
+	it('convertVerbose works without options argument (uses defaults)', async () => {
+		const buf = fs.readFileSync(SIMPLE);
+		const { markdown, warnings } = await convertVerbose(buf);
+		expect(markdown).toContain('# Hello World');
+		expect(Array.isArray(warnings)).toBe(true);
 	});
 });

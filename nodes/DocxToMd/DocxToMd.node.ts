@@ -98,11 +98,15 @@ export async function lint(md: string): Promise<string> {
 	return markdownlint.applyFixes(md, lintResult['content']).trim();
 }
 
-// Converts a Word document to crisp, clean Markdown
-export async function convert(
+export interface ConvertVerboseResult {
+	markdown: string;
+	warnings: string[];
+}
+
+export async function convertVerbose(
 	input: string | Buffer | ArrayBuffer,
 	options: ConvertOptions = {},
-): Promise<string> {
+): Promise<ConvertVerboseResult> {
 	let inputObj: { path: string } | { buffer: Buffer };
 	if (typeof input === 'string') {
 		inputObj = { path: input };
@@ -114,8 +118,20 @@ export async function convert(
 		? mammothResult.value
 		: autoTableHeaders(mammothResult.value);
 	const md = htmlToMd(html, options.turndown, options.removeImages);
-	if (options.lint === false) return md.trim();
-	return lint(md);
+	const finalMd = options.lint === false ? md.trim() : await lint(md);
+	const warnings = mammothResult.messages.map(
+		(m: { type: string; message: string }) => `[${m.type}] ${m.message}`,
+	);
+	return { markdown: finalMd, warnings };
+}
+
+// Converts a Word document to crisp, clean Markdown
+export async function convert(
+	input: string | Buffer | ArrayBuffer,
+	options: ConvertOptions = {},
+): Promise<string> {
+	const { markdown } = await convertVerbose(input, options);
+	return markdown;
 }
 
 export class DocxToMd implements INodeType {
@@ -200,6 +216,13 @@ export class DocxToMd implements INodeType {
 						description: 'Whether headings use ATX (#) or Setext (underline) syntax',
 					},
 					{
+						displayName: 'Include Warnings',
+						name: 'includeWarnings',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to attach Mammoth conversion warnings to the JSON output under "warnings"',
+					},
+					{
 						displayName: 'Lint Markdown',
 						name: 'lintMarkdown',
 						type: 'boolean',
@@ -262,10 +285,13 @@ export class DocxToMd implements INodeType {
 				if (options.lintMarkdown === false) convertOptions.lint = false;
 				if (options.tableFirstRowAsHeader === false) convertOptions.tableFirstRowAsHeader = false;
 
-				const result = await convert(binaryData, convertOptions);
+				const { markdown, warnings } = await convertVerbose(binaryData, convertOptions);
+
+				const jsonOut: IDataObject = { [destinationOutputField]: markdown };
+				if (options.includeWarnings === true) jsonOut.warnings = warnings;
 
 				returnData.push({
-					json: { [destinationOutputField]: result },
+					json: jsonOut,
 					pairedItem: { item: i },
 				});
 			} catch (err) {

@@ -286,6 +286,39 @@ describe('DocxToMd.execute', () => {
 			/Input is not a valid \.docx file/,
 		);
 	});
+
+	it('omits warnings from the output by default', async () => {
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: {},
+			},
+			binaryBuffer: simpleBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		expect(result[0][0].json).not.toHaveProperty('warnings');
+	});
+
+	it('includes warnings in the output when Include Warnings is on', async () => {
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: { includeWarnings: true },
+			},
+			binaryBuffer: simpleBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		const out = result[0][0].json as { warnings?: string[] };
+		expect(Array.isArray(out.warnings)).toBe(true);
+	});
 });
 
 describe('DocxToMd.description', () => {
