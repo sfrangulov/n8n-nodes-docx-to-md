@@ -8,6 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const JSZip = require('jszip');
+const mammoth = require('mammoth');
 
 const OUT_DIR = __dirname;
 
@@ -18,6 +19,7 @@ const CONTENT_TYPES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   <Default Extension="png" ContentType="image/png"/>
   <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
   <Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
 </Types>`;
 
 const ROOT_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -35,10 +37,12 @@ function wrapDocument(body) {
 </w:document>`;
 }
 
-const SIMPLE_DOC_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>
-</Relationships>`;
+const SIMPLE_STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:style w:type="paragraph" w:styleId="Code">
+    <w:name w:val="Code"/>
+  </w:style>
+</w:styles>`;
 
 const SIMPLE_NUMBERING = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -55,6 +59,12 @@ const SIMPLE_NUMBERING = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?
     <w:abstractNumId w:val="1"/>
   </w:num>
 </w:numbering>`;
+
+const SIMPLE_DOC_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
 
 const SIMPLE_BODY = `
 <w:p>
@@ -73,6 +83,10 @@ const SIMPLE_BODY = `
 <w:p>
   <w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr>
   <w:r><w:t>Second item</w:t></w:r>
+</w:p>
+<w:p>
+  <w:pPr><w:pStyle w:val="Code"/></w:pPr>
+  <w:r><w:t>const x = 1;</w:t></w:r>
 </w:p>
 `;
 
@@ -161,19 +175,31 @@ async function buildDocx(name, body, extras = {}) {
 	if (extras.numbering) {
 		zip.file('word/numbering.xml', extras.numbering);
 	}
+	if (extras.styles) {
+		zip.file('word/styles.xml', extras.styles);
+	}
 	if (extras.media) {
 		for (const [filename, buffer] of Object.entries(extras.media)) {
 			zip.file(`word/media/${filename}`, buffer);
 		}
 	}
-	const buf = await zip.generateAsync({ type: 'nodebuffer' });
+	let buf = await zip.generateAsync({ type: 'nodebuffer' });
+	if (extras.embedStyleMap) {
+		const embedded = await mammoth.embedStyleMap({ buffer: buf }, extras.embedStyleMap);
+		buf = embedded.toBuffer();
+	}
 	const outPath = path.join(OUT_DIR, name);
 	fs.writeFileSync(outPath, buf);
 	console.log(`wrote ${outPath} (${buf.length} bytes)`);
 }
 
 (async () => {
-	await buildDocx('simple.docx', SIMPLE_BODY, { documentRels: SIMPLE_DOC_RELS, numbering: SIMPLE_NUMBERING });
+	await buildDocx('simple.docx', SIMPLE_BODY, {
+		documentRels: SIMPLE_DOC_RELS,
+		numbering: SIMPLE_NUMBERING,
+		styles: SIMPLE_STYLES,
+		embedStyleMap: "p[style-name='Code'] => pre > code:fresh",
+	});
 	await buildDocx('with-table.docx', TABLE_BODY);
 	await buildDocx('with-image.docx', IMAGE_BODY, {
 		documentRels: IMAGE_DOC_RELS,

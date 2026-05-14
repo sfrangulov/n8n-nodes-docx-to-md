@@ -64,7 +64,7 @@ describe('convert', () => {
 
 	it('renders setext-style headings when turndown.headingStyle = setext', async () => {
 		const md = await convert(SIMPLE, { turndown: { headingStyle: 'setext' } });
-		expect(md).toMatch(/Hello World\n=+/);
+		expect(md).toMatch(/^Hello World\n=+/m);
 	});
 
 	it('uses asterisks for bullets when turndown.bulletListMarker = *', async () => {
@@ -73,8 +73,12 @@ describe('convert', () => {
 	});
 
 	it('emits indented code blocks when turndown.codeBlockStyle = indented', async () => {
-		// SIMPLE doesn't have code blocks; this just verifies the option threads through.
 		const md = await convert(SIMPLE, { turndown: { codeBlockStyle: 'indented' } });
-		expect(md).toContain('# Hello World');
+		expect(md).toMatch(/^ {4}const x = 1;/m);
+	});
+
+	it('emits fenced code blocks by default', async () => {
+		const md = await convert(SIMPLE);
+		expect(md).toContain('```\nconst x = 1;\n```');
 	});
 });

@@ -170,7 +170,7 @@ describe('DocxToMd.execute', () => {
 		const node = new DocxToMd();
 		const result = await node.execute.call(ctx);
 		const out = result[0][0].json as { text: string };
-		expect(out.text).toMatch(/Hello World\n=+/);
+		expect(out.text).toMatch(/^Hello World\n=+/m);
 	});
 
 	it('threads Options.bulletListMarker through to the converter', async () => {
@@ -204,7 +204,7 @@ describe('DocxToMd.execute', () => {
 		const node = new DocxToMd();
 		const result = await node.execute.call(ctx);
 		const out = result[0][0].json as { text: string };
-		expect(out.text).toContain('# Hello World');
+		expect(out.text).toMatch(/^ {4}const x = 1;/m);
 	});
 });
 
