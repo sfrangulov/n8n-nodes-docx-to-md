@@ -207,6 +207,27 @@ describe('DocxToMd.execute', () => {
 		expect(out.text).toMatch(/^ {4}const x = 1;/m);
 	});
 
+	// Behavioural correctness is covered by the convert-level test;
+	// this test exists to ensure the execute path wires options.tableFirstRowAsHeader
+	// through to convertOptions.tableFirstRowAsHeader.
+	it('skips autoTableHeaders when Options.tableFirstRowAsHeader = false', async () => {
+		const tableBuf = fs.readFileSync(path.join(FIXTURES, 'with-table.docx'));
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: { tableFirstRowAsHeader: false },
+			},
+			binaryBuffer: tableBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		const out = result[0][0].json as { text: string };
+		expect(out.text).not.toMatch(/\|\s*Header A\s*\|\s*Header B\s*\|\s*\n\s*\|\s*-+\s*\|/);
+	});
+
 	// Behavioural correctness is covered by the convert-level test above;
 	// this test exists to ensure the execute path wires options.lintMarkdown
 	// through to convertOptions.lint.

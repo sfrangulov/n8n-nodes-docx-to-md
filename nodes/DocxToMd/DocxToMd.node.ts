@@ -23,6 +23,7 @@ export interface ConvertOptions {
 	turndown?: object;
 	removeImages?: boolean;
 	lint?: boolean;
+	tableFirstRowAsHeader?: boolean;
 }
 
 interface TurndownOptions {
@@ -105,7 +106,9 @@ export async function convert(
 		inputObj = { buffer: Buffer.isBuffer(input) ? input : Buffer.from(input) };
 	}
 	const mammothResult = await mammoth.convertToHtml(inputObj, options.mammoth);
-	const html = autoTableHeaders(mammothResult.value);
+	const html = options.tableFirstRowAsHeader === false
+		? mammothResult.value
+		: autoTableHeaders(mammothResult.value);
 	const md = htmlToMd(html, options.turndown, options.removeImages);
 	if (options.lint === false) return md.trim();
 	return lint(md);
@@ -199,6 +202,13 @@ export class DocxToMd implements INodeType {
 						default: true,
 						description: 'Whether to run markdownlint auto-fix on the converted Markdown',
 					},
+					{
+						displayName: 'Table First Row as Header',
+						name: 'tableFirstRowAsHeader',
+						type: 'boolean',
+						default: true,
+						description: 'Whether to promote the first row of each table to header cells',
+					},
 				],
 			},
 		],
@@ -230,6 +240,7 @@ export class DocxToMd implements INodeType {
 
 				const convertOptions: ConvertOptions = { removeImages, turndown };
 				if (options.lintMarkdown === false) convertOptions.lint = false;
+				if (options.tableFirstRowAsHeader === false) convertOptions.tableFirstRowAsHeader = false;
 
 				const result = await convert(binaryData, convertOptions);
 

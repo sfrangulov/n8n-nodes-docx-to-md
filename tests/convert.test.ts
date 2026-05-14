@@ -92,4 +92,14 @@ describe('convert', () => {
 		expect(unlinted).not.toBe(lintedDefault);
 		expect(unlinted.length).toBeGreaterThan(lintedDefault.length);
 	});
+
+	it('keeps the original first row as data when tableFirstRowAsHeader = false', async () => {
+		const md = await convert(WITH_TABLE, { tableFirstRowAsHeader: false });
+		// Without the header rewrite, turndown emits its own empty-header row;
+		// the original "Header A"/"Header B" cells should NOT appear in the
+		// header row (the line above the |---|---| separator).
+		expect(md).toContain('Header A');
+		expect(md).toContain('Row 1 A');
+		expect(md).not.toMatch(/\|\s*Header A\s*\|\s*Header B\s*\|\s*\n\s*\|\s*-+\s*\|/);
+	});
 });
