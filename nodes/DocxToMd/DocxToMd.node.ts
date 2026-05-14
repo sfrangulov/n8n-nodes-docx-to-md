@@ -178,19 +178,19 @@ export class DocxToMd implements INodeType {
 					pairedItem: { item: i },
 				});
 			} catch (err) {
+				const wrapped =
+					err instanceof NodeOperationError
+						? err
+						: new NodeOperationError(this.getNode(), err as Error, { itemIndex: i });
 				if (this.continueOnFail()) {
 					returnData.push({
 						json: { error: (err as Error).message },
-						error: err instanceof NodeOperationError
-							? err
-							: new NodeOperationError(this.getNode(), err as Error, { itemIndex: i }),
+						error: wrapped,
 						pairedItem: { item: i },
 					});
-					continue;
+				} else {
+					throw wrapped;
 				}
-				throw err instanceof NodeOperationError
-					? err
-					: new NodeOperationError(this.getNode(), err as Error, { itemIndex: i });
 			}
 		}
 

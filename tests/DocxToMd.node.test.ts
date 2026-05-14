@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
+import type { IExecuteFunctions } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { DocxToMd } from '../nodes/DocxToMd/DocxToMd.node';
 
 const FIXTURES = path.join(__dirname, 'fixtures');
@@ -25,10 +26,6 @@ function makeContext(opts: {
 		continueOnFail: () => opts.continueOnFail === true,
 		helpers: {
 			getBinaryDataBuffer: async () => opts.binaryBuffer,
-			returnJsonArray: (data: Array<Record<string, unknown>>): INodeExecutionData[] =>
-				data.map((item) =>
-					'json' in item ? (item as INodeExecutionData) : { json: item as INodeExecutionData['json'] },
-				),
 		},
 	};
 	return ctx as unknown as IExecuteFunctions;
@@ -141,7 +138,7 @@ describe('DocxToMd.execute', () => {
 		expect(result[0]).toHaveLength(1);
 		const out = result[0][0];
 		expect(out.json).toHaveProperty('error');
-		expect(out.error).toBeDefined();
+		expect(out.error).toBeInstanceOf(NodeOperationError);
 		expect(out.pairedItem).toEqual({ item: 0 });
 	});
 
@@ -155,8 +152,7 @@ describe('DocxToMd.execute', () => {
 			continueOnFail: false,
 		});
 		const node = new DocxToMd();
-		const { NodeOperationError: NOE } = await import('n8n-workflow');
-		await expect(node.execute.call(ctx)).rejects.toBeInstanceOf(NOE);
+		await expect(node.execute.call(ctx)).rejects.toBeInstanceOf(NodeOperationError);
 	});
 });
 
