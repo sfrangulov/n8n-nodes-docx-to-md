@@ -207,6 +207,9 @@ describe('DocxToMd.execute', () => {
 		expect(out.text).toMatch(/^ {4}const x = 1;/m);
 	});
 
+	// Behavioural correctness is covered by the convert-level test above;
+	// this test exists to ensure the execute path wires options.lintMarkdown
+	// through to convertOptions.lint.
 	it('skips markdownlint when Options.lintMarkdown = false', async () => {
 		const ctx = makeContext({
 			itemCount: 1,

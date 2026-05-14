@@ -86,7 +86,10 @@ describe('convert', () => {
 		const lintedDefault = await convert(SIMPLE);
 		const unlinted = await convert(SIMPLE, { lint: false });
 		expect(unlinted).toContain('# Hello World');
-		// Linted output is trimmed; unlinted should be at least as long.
-		expect(unlinted.length).toBeGreaterThanOrEqual(lintedDefault.length);
+		// SIMPLE deliberately contains consecutive blank paragraphs; markdownlint
+		// MD012 collapses them. So the unlinted output must be strictly longer
+		// and must differ from the linted output.
+		expect(unlinted).not.toBe(lintedDefault);
+		expect(unlinted.length).toBeGreaterThan(lintedDefault.length);
 	});
 });

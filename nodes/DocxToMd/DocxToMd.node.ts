@@ -197,7 +197,7 @@ export class DocxToMd implements INodeType {
 						name: 'lintMarkdown',
 						type: 'boolean',
 						default: true,
-						description: 'Whether to run markdownlint auto-fix on the converted Markdown. Disable to keep raw turndown output.',
+						description: 'Whether to run markdownlint auto-fix on the converted Markdown',
 					},
 				],
 			},

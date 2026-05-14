@@ -84,6 +84,8 @@ const SIMPLE_BODY = `
   <w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr>
   <w:r><w:t>Second item</w:t></w:r>
 </w:p>
+<w:p><w:r><w:br/></w:r></w:p>
+<w:p><w:r><w:br/></w:r></w:p>
 <w:p>
   <w:pPr><w:pStyle w:val="Code"/></w:pPr>
   <w:r><w:t>const x = 1;</w:t></w:r>
