@@ -1,16 +1,32 @@
+<div align="center">
+
 # n8n-nodes-docx-to-md
 
-This is an n8n community node. It lets you convert Microsoft Word documents (.docx) to Markdown format in your n8n workflows.
+**Convert Microsoft Word documents (`.docx`) to clean, GitHub-flavored Markdown — right inside your n8n workflows.**
 
-This node provides seamless conversion of Word documents to clean, GitHub-flavored Markdown with automatic formatting correction and linting.
+[![npm version](https://img.shields.io/npm/v/n8n-nodes-docx-to-md.svg?color=brightgreen)](https://www.npmjs.com/package/n8n-nodes-docx-to-md)
+[![npm downloads](https://img.shields.io/npm/dm/n8n-nodes-docx-to-md.svg)](https://www.npmjs.com/package/n8n-nodes-docx-to-md)
+[![CI](https://github.com/sfrangulov/n8n-nodes-docx-to-md/actions/workflows/ci.yml/badge.svg)](https://github.com/sfrangulov/n8n-nodes-docx-to-md/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/sfrangulov/n8n-nodes-docx-to-md/branch/master/graph/badge.svg)](https://codecov.io/gh/sfrangulov/n8n-nodes-docx-to-md)
+[![License: MIT](https://img.shields.io/npm/l/n8n-nodes-docx-to-md.svg)](https://github.com/sfrangulov/n8n-nodes-docx-to-md/blob/master/LICENSE.md)
+[![Node Version](https://img.shields.io/node/v/n8n-nodes-docx-to-md.svg)](https://nodejs.org)
+[![n8n community node](https://img.shields.io/badge/n8n-community%20node-FF6D5A)](https://docs.n8n.io/integrations/community-nodes/)
+[![AI Agent Tool](https://img.shields.io/badge/AI%20Agent-tool%20ready-8A2BE2)](https://docs.n8n.io/advanced-ai/examples/understand-tools/)
+
+</div>
+
+This n8n community node provides seamless conversion of Word documents to clean, GitHub-flavored Markdown with automatic formatting correction and linting.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
-[Installation](#installation)  
-[Operations](#operations)  
-[Compatibility](#compatibility)  
-[Usage](#usage)  
-[Resources](#resources)
+## Table of Contents
+
+- [Installation](#installation)
+- [Operations](#operations)
+- [Compatibility](#compatibility)
+- [Usage](#usage)
+- [Resources](#resources)
+- [License](#license)
 
 ## Installation
 
@@ -78,4 +94,4 @@ The Docx to Markdown node supports the following operation:
 
 ## License
 
-[MIT](https://github.com/n8n-io/n8n-nodes-starter/blob/master/LICENSE.md)
+[MIT](https://github.com/sfrangulov/n8n-nodes-docx-to-md/blob/master/LICENSE.md)
