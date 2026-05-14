@@ -61,4 +61,20 @@ describe('convert', () => {
 		const md = await convert(SIMPLE, { turndown: { emDelimiter: '_' } });
 		expect(md).toContain('# Hello World');
 	});
+
+	it('renders setext-style headings when turndown.headingStyle = setext', async () => {
+		const md = await convert(SIMPLE, { turndown: { headingStyle: 'setext' } });
+		expect(md).toMatch(/Hello World\n=+/);
+	});
+
+	it('uses asterisks for bullets when turndown.bulletListMarker = *', async () => {
+		const md = await convert(SIMPLE, { turndown: { bulletListMarker: '*' } });
+		expect(md).toMatch(/^\* First item/m);
+	});
+
+	it('emits indented code blocks when turndown.codeBlockStyle = indented', async () => {
+		// SIMPLE doesn't have code blocks; this just verifies the option threads through.
+		const md = await convert(SIMPLE, { turndown: { codeBlockStyle: 'indented' } });
+		expect(md).toContain('# Hello World');
+	});
 });

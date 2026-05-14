@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import type { IExecuteFunctions } from 'n8n-workflow';
+import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import { DocxToMd } from '../nodes/DocxToMd/DocxToMd.node';
 
@@ -10,6 +10,7 @@ interface Params {
 	inputBinaryField: string;
 	destinationOutputField: string;
 	removeImages: boolean;
+	options: IDataObject;
 }
 
 function makeContext(opts: {
@@ -37,7 +38,7 @@ describe('DocxToMd.execute', () => {
 	it('converts one item and writes the result into the configured output field', async () => {
 		const ctx = makeContext({
 			itemCount: 1,
-			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false },
+			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false, options: {} },
 			binaryBuffer: simpleBuf,
 		});
 		const node = new DocxToMd();
@@ -50,7 +51,7 @@ describe('DocxToMd.execute', () => {
 	it('honours the destinationOutputField parameter', async () => {
 		const ctx = makeContext({
 			itemCount: 1,
-			params: { inputBinaryField: 'data', destinationOutputField: 'markdown', removeImages: false },
+			params: { inputBinaryField: 'data', destinationOutputField: 'markdown', removeImages: false, options: {} },
 			binaryBuffer: simpleBuf,
 		});
 		const node = new DocxToMd();
@@ -63,7 +64,7 @@ describe('DocxToMd.execute', () => {
 	it('processes every input item', async () => {
 		const ctx = makeContext({
 			itemCount: 3,
-			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false },
+			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false, options: {} },
 			binaryBuffer: simpleBuf,
 		});
 		const node = new DocxToMd();
@@ -74,7 +75,7 @@ describe('DocxToMd.execute', () => {
 	it('returns an empty result for an empty input items array', async () => {
 		const ctx = makeContext({
 			itemCount: 0,
-			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false },
+			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false, options: {} },
 			binaryBuffer: simpleBuf,
 		});
 		const node = new DocxToMd();
@@ -85,7 +86,7 @@ describe('DocxToMd.execute', () => {
 	it('throws NodeOperationError when no binary data is found', async () => {
 		const ctx = makeContext({
 			itemCount: 1,
-			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false },
+			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false, options: {} },
 			binaryBuffer: null,
 		});
 		const node = new DocxToMd();
@@ -98,7 +99,7 @@ describe('DocxToMd.execute', () => {
 		const imageBuf = fs.readFileSync(path.join(FIXTURES, 'with-image.docx'));
 		const ctx = makeContext({
 			itemCount: 1,
-			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: true },
+			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: true, options: {} },
 			binaryBuffer: imageBuf,
 		});
 		const node = new DocxToMd();
@@ -111,7 +112,7 @@ describe('DocxToMd.execute', () => {
 	it('continues on fail and emits an error item when continueOnFail is true', async () => {
 		const ctx = makeContext({
 			itemCount: 1,
-			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false },
+			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false, options: {} },
 			binaryBuffer: null,
 			continueOnFail: true,
 		});
@@ -129,7 +130,7 @@ describe('DocxToMd.execute', () => {
 		const invalidBuf = Buffer.from('not a docx file');
 		const ctx = makeContext({
 			itemCount: 1,
-			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false },
+			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false, options: {} },
 			binaryBuffer: invalidBuf,
 			continueOnFail: true,
 		});
@@ -147,12 +148,63 @@ describe('DocxToMd.execute', () => {
 		const invalidBuf = Buffer.from('not a docx file');
 		const ctx = makeContext({
 			itemCount: 1,
-			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false },
+			params: { inputBinaryField: 'data', destinationOutputField: 'text', removeImages: false, options: {} },
 			binaryBuffer: invalidBuf,
 			continueOnFail: false,
 		});
 		const node = new DocxToMd();
 		await expect(node.execute.call(ctx)).rejects.toBeInstanceOf(NodeOperationError);
+	});
+
+	it('threads Options.headingStyle through to the converter', async () => {
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: { headingStyle: 'setext' },
+			},
+			binaryBuffer: simpleBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		const out = result[0][0].json as { text: string };
+		expect(out.text).toMatch(/Hello World\n=+/);
+	});
+
+	it('threads Options.bulletListMarker through to the converter', async () => {
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: { bulletListMarker: '*' },
+			},
+			binaryBuffer: simpleBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		const out = result[0][0].json as { text: string };
+		expect(out.text).toMatch(/^\* First item/m);
+	});
+
+	it('threads Options.codeBlockStyle through to the converter', async () => {
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: { codeBlockStyle: 'indented' },
+			},
+			binaryBuffer: simpleBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		const out = result[0][0].json as { text: string };
+		expect(out.text).toContain('# Hello World');
 	});
 });
 

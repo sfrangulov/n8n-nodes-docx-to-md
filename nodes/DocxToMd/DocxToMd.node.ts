@@ -1,4 +1,5 @@
 import type {
+	IDataObject,
 	IExecuteFunctions,
 	INodeExecutionData,
 	INodeType,
@@ -53,8 +54,8 @@ export function autoTableHeaders(html: string): string {
 // Convert HTML to GitHub-flavored Markdown
 export function htmlToMd(html: string, options: object = {}, removeImages: boolean = false): string {
 	const turndownService = new TurndownService({
-		...options,
 		...defaultTurndownOptions,
+		...options,
 	});
 	turndownService.use(turndownPluginGfm.gfm);
 	turndownService.addRule('preserveAnchors', {
@@ -149,6 +150,49 @@ export class DocxToMd implements INodeType {
 				default: false,
 				description: 'Whether to remove images from the converted Markdown',
 			},
+			{
+				displayName: 'Options',
+				name: 'options',
+				type: 'collection',
+				placeholder: 'Add option',
+				default: {},
+				options: [
+					{
+						displayName: 'Bullet List Marker',
+						name: 'bulletListMarker',
+						type: 'options',
+						default: '-',
+						options: [
+							{ name: 'Dash (-)', value: '-' },
+							{ name: 'Asterisk (*)', value: '*' },
+							{ name: 'Plus (+)', value: '+' },
+						],
+						description: 'Character used for unordered list items in the generated Markdown',
+					},
+					{
+						displayName: 'Code Block Style',
+						name: 'codeBlockStyle',
+						type: 'options',
+						default: 'fenced',
+						options: [
+							{ name: 'Fenced (```)', value: 'fenced' },
+							{ name: 'Indented (4 spaces)', value: 'indented' },
+						],
+						description: 'Whether code blocks are rendered as fenced or indented blocks',
+					},
+					{
+						displayName: 'Heading Style',
+						name: 'headingStyle',
+						type: 'options',
+						default: 'atx',
+						options: [
+							{ name: 'ATX (# Heading)', value: 'atx' },
+							{ name: 'Setext (Heading\\n===)', value: 'setext' },
+						],
+						description: 'Whether headings use ATX (#) or Setext (underline) syntax',
+					},
+				],
+			},
 		],
 	};
 
@@ -161,6 +205,11 @@ export class DocxToMd implements INodeType {
 				const inputBinaryField = this.getNodeParameter('inputBinaryField', i) as string;
 				const destinationOutputField = this.getNodeParameter('destinationOutputField', i) as string;
 				const removeImages = this.getNodeParameter('removeImages', i) as boolean;
+				const options = this.getNodeParameter('options', i, {}) as IDataObject;
+				const turndown: Record<string, unknown> = {};
+				if (typeof options.headingStyle === 'string') turndown.headingStyle = options.headingStyle;
+				if (typeof options.bulletListMarker === 'string') turndown.bulletListMarker = options.bulletListMarker;
+				if (typeof options.codeBlockStyle === 'string') turndown.codeBlockStyle = options.codeBlockStyle;
 
 				const binaryData = await this.helpers.getBinaryDataBuffer(i, inputBinaryField);
 				if (!binaryData) {
@@ -171,7 +220,7 @@ export class DocxToMd implements INodeType {
 					);
 				}
 
-				const result = await convert(binaryData, { removeImages });
+				const result = await convert(binaryData, { removeImages, turndown });
 
 				returnData.push({
 					json: { [destinationOutputField]: result },

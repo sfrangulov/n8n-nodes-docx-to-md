@@ -17,6 +17,7 @@ const CONTENT_TYPES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   <Default Extension="xml" ContentType="application/xml"/>
   <Default Extension="png" ContentType="image/png"/>
   <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>
 </Types>`;
 
 const ROOT_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -33,6 +34,27 @@ function wrapDocument(body) {
   </w:body>
 </w:document>`;
 }
+
+const SIMPLE_DOC_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>
+</Relationships>`;
+
+const SIMPLE_NUMBERING = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:abstractNum w:abstractNumId="1">
+    <w:lvl w:ilvl="0">
+      <w:start w:val="1"/>
+      <w:numFmt w:val="bullet"/>
+      <w:lvlText w:val="&#x2022;"/>
+      <w:lvlJc w:val="left"/>
+      <w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr>
+    </w:lvl>
+  </w:abstractNum>
+  <w:num w:numId="1">
+    <w:abstractNumId w:val="1"/>
+  </w:num>
+</w:numbering>`;
 
 const SIMPLE_BODY = `
 <w:p>
@@ -136,6 +158,9 @@ async function buildDocx(name, body, extras = {}) {
 	if (extras.documentRels) {
 		zip.file('word/_rels/document.xml.rels', extras.documentRels);
 	}
+	if (extras.numbering) {
+		zip.file('word/numbering.xml', extras.numbering);
+	}
 	if (extras.media) {
 		for (const [filename, buffer] of Object.entries(extras.media)) {
 			zip.file(`word/media/${filename}`, buffer);
@@ -148,7 +173,7 @@ async function buildDocx(name, body, extras = {}) {
 }
 
 (async () => {
-	await buildDocx('simple.docx', SIMPLE_BODY);
+	await buildDocx('simple.docx', SIMPLE_BODY, { documentRels: SIMPLE_DOC_RELS, numbering: SIMPLE_NUMBERING });
 	await buildDocx('with-table.docx', TABLE_BODY);
 	await buildDocx('with-image.docx', IMAGE_BODY, {
 		documentRels: IMAGE_DOC_RELS,
