@@ -7,14 +7,10 @@ import type {
 } from 'n8n-workflow';
 import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
 
-// @ts-ignore
 import TurndownService from '@joplin/turndown';
-// @ts-ignore
 import * as turndownPluginGfm from '@joplin/turndown-plugin-gfm';
 import * as mammoth from 'mammoth';
-// @ts-ignore
 const markdownlintSync = require('markdownlint/sync');
-// @ts-ignore
 const markdownlint = require('markdownlint');
 import { parse } from 'node-html-parser';
 
