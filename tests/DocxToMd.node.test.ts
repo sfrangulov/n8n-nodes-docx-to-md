@@ -34,6 +34,7 @@ function makeContext(opts: {
 
 describe('DocxToMd.execute', () => {
 	const simpleBuf = fs.readFileSync(path.join(FIXTURES, 'simple.docx'));
+	const customStyleBuf = fs.readFileSync(path.join(FIXTURES, 'with-custom-style.docx'));
 
 	it('converts one item and writes the result into the configured output field', async () => {
 		const ctx = makeContext({
@@ -336,6 +337,46 @@ describe('DocxToMd.execute', () => {
 		const out = result[0][0].json as { rawText?: string };
 		expect(typeof out.rawText).toBe('string');
 		expect(out.rawText).toContain('Hello World');
+	});
+
+	it('applies a Custom Style Map from the Options collection', async () => {
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: {
+					customStyleMap: {
+						mapping: [{ from: "p[style-name='MyCallout']", to: 'blockquote:fresh' }],
+					},
+				},
+			},
+			binaryBuffer: customStyleBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		const out = result[0][0].json as { text: string };
+		expect(out.text).toMatch(/^>\s+This paragraph uses a custom style\./m);
+	});
+
+	it('ignores empty rows in the Custom Style Map', async () => {
+		const ctx = makeContext({
+			itemCount: 1,
+			params: {
+				inputBinaryField: 'data',
+				destinationOutputField: 'text',
+				removeImages: false,
+				options: {
+					customStyleMap: { mapping: [{ from: '', to: '' }] },
+				},
+			},
+			binaryBuffer: simpleBuf,
+		});
+		const node = new DocxToMd();
+		const result = await node.execute.call(ctx);
+		const out = result[0][0].json as { text: string };
+		expect(out.text).toContain('# Hello World');
 	});
 });
 

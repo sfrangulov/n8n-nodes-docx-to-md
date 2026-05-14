@@ -43,6 +43,17 @@ function hasZipSignature(buf: Buffer): boolean {
 	return buf.length >= 4 && buf[0] === 0x50 && buf[1] === 0x4B && buf[2] === 0x03 && buf[3] === 0x04;
 }
 
+interface StyleMapping { from?: string; to?: string }
+interface StyleMapCollection { mapping?: StyleMapping[] }
+
+function buildStyleMapString(input: unknown): string | undefined {
+	const coll = input as StyleMapCollection | undefined;
+	const rules = (coll?.mapping ?? [])
+		.filter((r): r is Required<StyleMapping> => Boolean(r.from && r.to))
+		.map((r) => `${r.from} => ${r.to}`);
+	return rules.length > 0 ? rules.join('\n') : undefined;
+}
+
 // Turndown will add an empty header if the first row
 // of the table isn't `<th>` elements. This function
 // converts the first row of a table to `<th>` elements
@@ -217,6 +228,39 @@ export class DocxToMd implements INodeType {
 						description: 'Whether code blocks are rendered as fenced or indented blocks',
 					},
 					{
+						displayName: 'Custom Style Map',
+						name: 'customStyleMap',
+						type: 'fixedCollection',
+						typeOptions: { multipleValues: true },
+						default: {},
+						placeholder: 'Add style mapping',
+						description: 'Map Word styles to Markdown elements (see Mammoth.js styleMap docs)',
+						options: [
+							{
+								displayName: 'Mapping',
+								name: 'mapping',
+								values: [
+									{
+										displayName: 'From',
+										name: 'from',
+										type: 'string',
+										default: '',
+										placeholder: "p[style-name='MyCallout']",
+										description: 'Mammoth style-map left-hand side',
+									},
+									{
+										displayName: 'To',
+										name: 'to',
+										type: 'string',
+										default: '',
+										placeholder: 'blockquote',
+										description: 'Mammoth style-map right-hand side',
+									},
+								],
+							},
+						],
+					},
+					{
 						displayName: 'Heading Style',
 						name: 'headingStyle',
 						type: 'options',
@@ -300,7 +344,12 @@ export class DocxToMd implements INodeType {
 					);
 				}
 
+				const mammothOpts: Record<string, unknown> = {};
+				const styleMap = buildStyleMapString(options.customStyleMap);
+				if (styleMap !== undefined) mammothOpts.styleMap = styleMap;
+
 				const convertOptions: ConvertOptions = { removeImages, turndown };
+				if (Object.keys(mammothOpts).length > 0) convertOptions.mammoth = mammothOpts;
 				if (options.lintMarkdown === false) convertOptions.lint = false;
 				if (options.tableFirstRowAsHeader === false) convertOptions.tableFirstRowAsHeader = false;
 				if (options.includeRawText === true) convertOptions.rawText = true;

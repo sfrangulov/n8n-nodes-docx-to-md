@@ -6,6 +6,7 @@ const FIXTURES = path.join(__dirname, 'fixtures');
 const SIMPLE = path.join(FIXTURES, 'simple.docx');
 const WITH_TABLE = path.join(FIXTURES, 'with-table.docx');
 const WITH_IMAGE = path.join(FIXTURES, 'with-image.docx');
+const WITH_CUSTOM_STYLE = path.join(FIXTURES, 'with-custom-style.docx');
 
 describe('convert', () => {
 	it('converts a docx file given by path to markdown', async () => {
@@ -132,5 +133,13 @@ describe('convert', () => {
 	it('omits rawText when not requested', async () => {
 		const { rawText } = await convertVerbose(SIMPLE);
 		expect(rawText).toBeUndefined();
+	});
+
+	it('applies a custom style map passed through mammoth options', async () => {
+		const md = await convert(WITH_CUSTOM_STYLE, {
+			mammoth: { styleMap: "p[style-name='MyCallout'] => blockquote:fresh" },
+		});
+		expect(md).toMatch(/^>\s+This paragraph uses a custom style\./m);
+		expect(md).toContain('Regular paragraph.');
 	});
 });

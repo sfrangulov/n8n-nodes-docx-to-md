@@ -44,6 +44,23 @@ const SIMPLE_STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   </w:style>
 </w:styles>`;
 
+const CUSTOM_STYLE_BODY = `
+<w:p>
+	<w:pPr><w:pStyle w:val="MyCallout"/></w:pPr>
+	<w:r><w:t>This paragraph uses a custom style.</w:t></w:r>
+</w:p>
+<w:p>
+	<w:r><w:t>Regular paragraph.</w:t></w:r>
+</w:p>
+`;
+
+const CUSTOM_STYLE_STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:style w:type="paragraph" w:styleId="MyCallout">
+    <w:name w:val="MyCallout"/>
+  </w:style>
+</w:styles>`;
+
 const SIMPLE_NUMBERING = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:abstractNum w:abstractNumId="1">
@@ -207,6 +224,7 @@ async function buildDocx(name, body, extras = {}) {
 		documentRels: IMAGE_DOC_RELS,
 		media: { 'image1.png': ONE_PIXEL_PNG },
 	});
+	await buildDocx('with-custom-style.docx', CUSTOM_STYLE_BODY, { styles: CUSTOM_STYLE_STYLES });
 })().catch((err) => {
 	console.error(err);
 	process.exit(1);
