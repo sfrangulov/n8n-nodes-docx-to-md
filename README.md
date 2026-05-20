@@ -26,6 +26,7 @@ This n8n community node provides seamless conversion of Word documents to clean,
 - [Compatibility](#compatibility)
 - [Usage](#usage)
 - [Resources](#resources)
+- [Author](#author)
 - [License](#license)
 
 ## Installation
@@ -91,6 +92,10 @@ The Docx to Markdown node supports the following operation:
 - [Mammoth.js documentation](https://github.com/mwilliamson/mammoth.js/) (underlying conversion library)
 - [Turndown documentation](https://github.com/mixmark-io/turndown) (HTML to Markdown converter)
 - [GitHub Flavored Markdown Spec](https://github.github.com/gfm/)
+
+## Author
+
+Built by **[Sergei Frangulov](https://github.com/sfrangulov)** · [LinkedIn](https://www.linkedin.com/in/sfrangulov/)
 
 ## License
 
