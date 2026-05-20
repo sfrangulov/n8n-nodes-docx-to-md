@@ -8,3 +8,9 @@ coverage
 npm-debug.log*
 yarn.lock
 .vscode/launch.json
+docs/DOWNLOADS-SPIKE-ANALYSIS-2026-05.md
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key

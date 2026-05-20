@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "n8n_nodes_docx_to_md",
+  "project_id": "4ce1263c-62ef-4b03-8aec-8ffae1c1be47"
+}
