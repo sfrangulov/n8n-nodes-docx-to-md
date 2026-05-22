@@ -1,14 +1,16 @@
 # Publishes to npm with provenance when a version tag is pushed.
 #
+# This repo uses pnpm (pnpm-lock.yaml) for installs, but publishes via npm:
+# OIDC Trusted Publishing requires npm >= 11.5 (shipped with Node 24).
+#
 # Auth: npm OIDC Trusted Publishing (no NPM_TOKEN). One-time setup on npmjs.com:
-#   package settings -> Trusted Publishers -> Add publisher -> GitHub Actions
+#   n8n-nodes-docx-to-md settings -> Trusted Publishers -> GitHub Actions
 #     Repository owner:  sfrangulov
 #     Repository name:   n8n-nodes-docx-to-md
 #     Workflow filename: publish.yml
 #
 # Release flow:
-#   npm version <patch|minor|major>   # bumps package.json + creates a git tag
-#   git push && git push --tags       # pushing the tag triggers this workflow
+#   npm version <patch|minor|major> && git push --follow-tags
 name: Publish
 
 on:
@@ -26,13 +28,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
-      - run: npm ci
-      # OIDC Trusted Publishing requires npm >= 11.5; runners ship npm 10.
-      - run: npm install -g npm@latest
-      # prepublishOnly runs build + lint; provenance is signed via OIDC.
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      # prepublishOnly runs build + lint; publish via npm for OIDC provenance.
       - run: npm publish --provenance --access public
