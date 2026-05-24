@@ -10,11 +10,11 @@
 [![codecov](https://codecov.io/gh/sfrangulov/n8n-nodes-docx-to-md/branch/master/graph/badge.svg)](https://codecov.io/gh/sfrangulov/n8n-nodes-docx-to-md)
 [![License: MIT](https://img.shields.io/npm/l/n8n-nodes-docx-to-md.svg)](https://github.com/sfrangulov/n8n-nodes-docx-to-md/blob/master/LICENSE.md)
 [![Node Version](https://img.shields.io/node/v/n8n-nodes-docx-to-md.svg)](https://nodejs.org)
+[![n8n community node](https://img.shields.io/badge/n8n-community%20node-FF6D5A)](https://docs.n8n.io/integrations/community-nodes/)
+[![AI Agent Tool](https://img.shields.io/badge/AI%20Agent-tool%20ready-8A2BE2)](https://docs.n8n.io/advanced-ai/examples/understand-tools/)
 [![ephemeris momentum](https://ephemeris.tools/badge/sfrangulov/n8n-nodes-docx-to-md/momentum.svg?theme=auto)](https://ephemeris.tools/u/sfrangulov)
 [![ephemeris sparkline](https://ephemeris.tools/badge/sfrangulov/n8n-nodes-docx-to-md/sparkline.svg?theme=auto)](https://ephemeris.tools/u/sfrangulov)
 [![ephemeris stars](https://ephemeris.tools/badge/sfrangulov/n8n-nodes-docx-to-md/stars.svg?theme=auto)](https://ephemeris.tools/u/sfrangulov)
-[![n8n community node](https://img.shields.io/badge/n8n-community%20node-FF6D5A)](https://docs.n8n.io/integrations/community-nodes/)
-[![AI Agent Tool](https://img.shields.io/badge/AI%20Agent-tool%20ready-8A2BE2)](https://docs.n8n.io/advanced-ai/examples/understand-tools/)
 
 </div>
 
